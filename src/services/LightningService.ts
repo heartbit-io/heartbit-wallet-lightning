@@ -88,11 +88,11 @@ class LightningService {
 
 	static makePayment = async (
 		lnd: lightning.AuthenticatedLnd,
-		invoice: lightning.CreateInvoiceResult,
+		invoiceRequest: string,
 	): Promise<lightning.PayResult> => {
 		const paymentReceipt: lightning.PayResult = await lightning.pay({
 			lnd,
-			request: invoice.request,
+			request: invoiceRequest,
 		});
 
 		return paymentReceipt;
