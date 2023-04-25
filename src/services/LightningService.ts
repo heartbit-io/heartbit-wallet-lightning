@@ -100,6 +100,15 @@ class LightningService {
 
 		return paymentReceipt;
 	};
+
+	static getBtcAddressList = async (
+		lnd: lightning.AuthenticatedLnd,
+	): Promise<lightning.GetChainAddressesResult> => {
+		const btcAddressList: lightning.GetChainAddressesResult =
+			await lightning.getChainAddresses({ lnd });
+
+		return btcAddressList;
+	};
 }
 
 export default LightningService;
