@@ -71,6 +71,7 @@ class LightningService {
 	static requestPayment = async (
 		lnd: lightning.AuthenticatedLnd,
 		amount: number,
+		description?: string,
 	): Promise<lightning.CreateInvoiceResult> => {
 		/*
             there's no "address" in lightning network
@@ -81,6 +82,8 @@ class LightningService {
 			await lightning.createInvoice({
 				lnd,
 				tokens: amount,
+				description: description,
+				is_fallback_included: true,
 			});
 		// invoice to show client
 		return invoice;
