@@ -71,6 +71,7 @@ class LightningService {
 	static requestPayment = async (
 		lnd: lightning.AuthenticatedLnd,
 		amount: number,
+		description?: string,
 	): Promise<lightning.CreateInvoiceResult> => {
 		/*
             there's no "address" in lightning network
@@ -81,6 +82,8 @@ class LightningService {
 			await lightning.createInvoice({
 				lnd,
 				tokens: amount,
+				description: description,
+				is_fallback_included: true,
 			});
 		// invoice to show client
 		return invoice;
@@ -96,6 +99,15 @@ class LightningService {
 		});
 
 		return paymentReceipt;
+	};
+
+	static getBtcAddressList = async (
+		lnd: lightning.AuthenticatedLnd,
+	): Promise<lightning.GetChainAddressesResult> => {
+		const btcAddressList: lightning.GetChainAddressesResult =
+			await lightning.getChainAddresses({ lnd });
+
+		return btcAddressList;
 	};
 }
 
