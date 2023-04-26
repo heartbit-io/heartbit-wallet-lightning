@@ -1,5 +1,7 @@
 import * as dotenv from 'dotenv';
+import { once } from 'events';
 import * as lightning from 'lightning';
+import { EventEmitter } from 'stream';
 
 dotenv.config();
 
@@ -83,7 +85,6 @@ class LightningService {
 				lnd,
 				tokens: amount,
 				description: description,
-				is_fallback_included: true,
 			});
 		// invoice to show client
 		return invoice;
@@ -108,6 +109,39 @@ class LightningService {
 			await lightning.getChainAddresses({ lnd });
 
 		return btcAddressList;
+	};
+
+	static getBtcBalance = async (
+		lnd: lightning.AuthenticatedLnd,
+	): Promise<number> => {
+		const { chain_balance } = await lightning.getChainBalance({ lnd });
+		return chain_balance;
+	};
+
+	static withdrawalEventOn = async (
+		lnd: lightning.AuthenticatedLnd,
+		onConfirm: Function,
+		onFail: Function,
+		onPaying?: Function,
+	): Promise<void> => {
+		const eventSubscriber: EventEmitter = lightning.subscribeToPayments({
+			lnd,
+		});
+		eventSubscriber.on('confirmed', event => onConfirm(event));
+		eventSubscriber.on('failed', event => onFail(event));
+		onPaying === undefined
+			? ''
+			: eventSubscriber.on('paying', event => onPaying(event));
+	};
+
+	static depositEventOn = async (
+		lnd: lightning.AuthenticatedLnd,
+		onReceive: Function,
+	): Promise<void> => {
+		const eventSubscriber: EventEmitter = lightning.subscribeToInvoices({
+			lnd,
+		});
+		eventSubscriber.on('invoice_updated', event => onReceive(event));
 	};
 }
 
