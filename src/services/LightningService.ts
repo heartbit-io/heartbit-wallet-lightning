@@ -96,9 +96,9 @@ class LightningService {
 	};
 
 	static makePayment = async (
-		lnd: lightning.AuthenticatedLnd,
 		invoiceRequest: string,
 	): Promise<lightning.PayResult> => {
+		const lnd = await this.getLNDAdmin();
 		const paymentReceipt: lightning.PayResult = await lightning.pay({
 			lnd,
 			request: invoiceRequest,
@@ -114,6 +114,17 @@ class LightningService {
 			await lightning.getChainAddresses({ lnd });
 
 		return btcAddressList;
+	};
+
+	static decodeInvoice = async (
+		request: string,
+	): Promise<lightning.DecodePaymentRequestResult> => {
+		const lnd = await this.getLNDAdmin();
+
+		return await lightning.decodePaymentRequest({
+			lnd,
+			request,
+		});
 	};
 
 	static getBtcBalance = async (
