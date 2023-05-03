@@ -1,28 +1,31 @@
-import * as dotenv from 'dotenv';
 import { once } from 'events';
 import * as lightning from 'lightning';
 import { EventEmitter } from 'stream';
-
-dotenv.config();
-
-const LND_TLS = process.env.LND_TLS as string;
-const LND_MACAROON = process.env.LND_MACAROON as string;
-const LND_SOCKET = process.env.LND_SOCKET as string;
+import env from '../config/env';
 
 class LightningService {
 	static getLNDAdmin = async (): Promise<lightning.AuthenticatedLnd> => {
 		const { lnd } = lightning.authenticatedLndGrpc({
-			cert: LND_TLS,
-			macaroon: LND_MACAROON,
-			socket: LND_SOCKET,
+			cert: '',
+			macaroon: env.LND_MACAROON,
+			socket: env.LND_GRPC_URL,
 		});
 		// lnd is necessry arg for most of methods
-		return lnd as lightning.AuthenticatedLnd;
+		return lnd;
 	};
 
-	static getLNDWalletInfo = async (
-		lnd: lightning.AuthenticatedLnd,
-	): Promise<lightning.GetWalletInfoResult> => {
+	static connectionStatus = async (): Promise<boolean> => {
+		const lnd = await this.getLNDAdmin();
+		const walletInfo = await lightning.getWalletInfo({ lnd });
+		if (walletInfo.public_key) {
+			return true;
+		}
+		return false;
+	};
+
+	static getLNDWalletInfo = async (): // lnd: lightning.AuthenticatedLnd,
+	Promise<lightning.GetWalletInfoResult> => {
+		const lnd = await this.getLNDAdmin();
 		const wallet: lightning.GetWalletInfoResult = await lightning.getWalletInfo(
 			{ lnd },
 		);
@@ -71,10 +74,12 @@ class LightningService {
 	};
 
 	static requestPayment = async (
-		lnd: lightning.AuthenticatedLnd,
+		// lnd: lightning.AuthenticatedLnd,
 		amount: number,
 		description?: string,
 	): Promise<lightning.CreateInvoiceResult> => {
+		const lnd = await this.getLNDAdmin();
+
 		/*
             there's no "address" in lightning network
             only way to transfer is by creating invoice,

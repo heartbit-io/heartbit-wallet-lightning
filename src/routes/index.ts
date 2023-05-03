@@ -1,10 +1,15 @@
-import { Router, Request, Response } from 'express';
-import LightningService from '../services/LightningService';
+import { Router } from 'express';
+import PaymentsController from '../controllers/PaymentsController';
+import Validation from '../util/Validator';
+import PaymentValidator from '../lib/PaymentValidator';
 
 const router = Router();
 
-router.get('/connection', (req: Request, res: Response) => {
-	return res.status(200).json({ message: LightningService.getLNDAdmin() });
-});
+router.get(
+	'/paymentrequest',
+	PaymentValidator.paymentRequest(),
+	Validation.validate,
+	PaymentsController.getPaymentRequest,
+);
 
 export default router;
