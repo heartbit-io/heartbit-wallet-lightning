@@ -8,7 +8,6 @@ const env = {
 	LND_TLS_CERT: process.env.LND_TLS_CERT as string,
 };
 
-// Ensure all keys exist
 Object.entries(env).forEach(([key, value]) => {
 	if (!value) {
 		throw new Error(`Required environment variable '${key}' is missing!`);
