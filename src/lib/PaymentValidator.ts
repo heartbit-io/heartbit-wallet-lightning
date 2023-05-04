@@ -1,5 +1,6 @@
 import { body, param, query } from 'express-validator';
 import DatabaseService from '../services/DatabaseService';
+import { Request } from 'express';
 
 class PaymentValidator {
 	requestPayment() {
@@ -34,6 +35,10 @@ class PaymentValidator {
 				.rtrim()
 				.escape()
 				.withMessage('supply a valid email'),
+			body('amount')
+				.isNumeric()
+				.notEmpty()
+				.withMessage('supply a valid amount'),
 		];
 	}
 }

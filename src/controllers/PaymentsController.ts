@@ -54,10 +54,9 @@ class PaymentsController {
 		request: Request,
 		response: Response,
 	): Promise<Response<FormatResponse>> {
-		const { invoice } = request.body;
+		const { invoice, email, amount } = request.body;
 
 		try {
-			const { email } = request.body;
 			//check that user has enough balance
 			const user = await DatabaseService.getUserBtcBalance(email);
 
@@ -76,31 +75,41 @@ class PaymentsController {
 
 			const userBalance = user.get('btcBalance') as number;
 
-			//decode invoice and check that the user sufficient balance
-			// const invoiceAmount = await LightningService.decodeInvoice(invoice);
-
-			const payment = await LightningService.makePayment(invoice);
-
-			if (!payment.is_confirmed) {
+			if (userBalance < amount) {
 				return response
-					.status(HttpCodes.INTERNAL_SERVER_ERROR)
+					.status(HttpCodes.UNPROCESSED_CONTENT)
 					.json(
 						new FormatResponse(
 							false,
-							HttpCodes.INTERNAL_SERVER_ERROR,
-							'Payment failed',
+							HttpCodes.UNPROCESSED_CONTENT,
+							'Insufficient balance',
 							null,
 						),
 					);
 			}
 
+			const payment = await LightningService.makePayment(invoice);
+
+			if (!payment.is_confirmed) {
+				return response
+					.status(HttpCodes.UNPROCESSED_CONTENT)
+					.json(
+						new FormatResponse(
+							false,
+							HttpCodes.UNPROCESSED_CONTENT,
+							'Payment failed',
+							null,
+						),
+					);
+			}
+			const newBalance = userBalance - amount;
 			//update user balance
-			// const updatedUser = await DatabaseService.updateUserBtcBalance(email, amount)
+			await DatabaseService.updateUserBtcBalance(email, newBalance);
 
 			return response
-				.status(200)
+				.status(HttpCodes.OK)
 				.json(
-					new FormatResponse(true, HttpCodes.OK, 'Payment successful', payment),
+					new FormatResponse(true, HttpCodes.OK, 'Withdrawal successful', user),
 				);
 		} catch (error) {
 			return response
