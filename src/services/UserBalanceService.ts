@@ -1,6 +1,6 @@
-import { UserInstance } from '../models/UserModel';
+import { UserInstance } from '../models/Usermodel';
 
-class DatabaseService {
+class UserBalanceService {
 	async getUserBtcBalance(userEmail: string) {
 		return await UserInstance.findOne({ where: { email: userEmail } });
 	}
@@ -14,4 +14,4 @@ class DatabaseService {
 	}
 }
 
-export default new DatabaseService();
+export default new UserBalanceService();

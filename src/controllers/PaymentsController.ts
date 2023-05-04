@@ -2,7 +2,7 @@ import LightningService from '../services/LightningService';
 import { Request, Response } from 'express';
 import FormatResponse from '../util/FormatResponse';
 import { HttpCodes } from '../util/HttpCodes';
-import DatabaseService from '../services/DatabaseService';
+import DatabaseService from '../services/UserBalanceService';
 
 export interface ResponseDto<T> {
 	success: boolean;
@@ -12,7 +12,7 @@ export interface ResponseDto<T> {
 }
 
 class PaymentsController {
-	async requestPayment(
+	async getPaymentRequest(
 		request: Request,
 		response: Response,
 	): Promise<Response<FormatResponse>> {
@@ -50,11 +50,13 @@ class PaymentsController {
 		}
 	}
 
-	async payInvoice(
+	async getWithdrawalRequest(
 		request: Request,
 		response: Response,
 	): Promise<Response<FormatResponse>> {
-		const { invoice, email, amount } = request.body;
+		const { amount } = request.query;
+
+		const email = request.query.email as string;
 
 		try {
 			//check that user has enough balance
@@ -75,7 +77,7 @@ class PaymentsController {
 
 			const userBalance = user.get('btcBalance') as number;
 
-			if (userBalance < amount) {
+			if (userBalance < Number(amount)) {
 				return response
 					.status(HttpCodes.UNPROCESSED_CONTENT)
 					.json(
@@ -88,23 +90,25 @@ class PaymentsController {
 					);
 			}
 
-			const payment = await LightningService.makePayment(invoice);
+			// TODO: implement withdrawal url using lnurl
+			// const payment = await LightningService.makePayment(invoice);
 
-			if (!payment.is_confirmed) {
-				return response
-					.status(HttpCodes.UNPROCESSED_CONTENT)
-					.json(
-						new FormatResponse(
-							false,
-							HttpCodes.UNPROCESSED_CONTENT,
-							'Payment failed',
-							null,
-						),
-					);
-			}
-			const newBalance = userBalance - amount;
-			//update user balance
-			await DatabaseService.updateUserBtcBalance(email, newBalance);
+			// if (!payment.is_confirmed) {
+			// 	return response
+			// 		.status(HttpCodes.UNPROCESSED_CONTENT)
+			// 		.json(
+			// 			new FormatResponse(
+			// 				false,
+			// 				HttpCodes.UNPROCESSED_CONTENT,
+			// 				'Payment failed',
+			// 				null,
+			// 			),
+			// 		);
+			// }
+			// //update user balance
+
+			// const newBalance = userBalance - amount;
+			// await DatabaseService.updateUserBtcBalance(email, newBalance);
 
 			return response
 				.status(HttpCodes.OK)

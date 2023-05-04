@@ -6,17 +6,17 @@ import PaymentValidator from '../lib/PaymentValidator';
 const router = Router();
 
 router.get(
-	'/requestpayment',
-	PaymentValidator.requestPayment(),
+	'/lnd/deposits/',
+	PaymentValidator.getPaymentRequest(),
 	Validation.validate,
-	PaymentsController.requestPayment,
+	PaymentsController.getPaymentRequest,
 );
 
 router.post(
-	'/payinvoice',
-	PaymentValidator.payInvoice(),
+	'/lnd/withdrawals/',
+	PaymentValidator.getPaymentRequest(),
 	Validation.validate,
-	PaymentsController.payInvoice,
+	PaymentsController.getWithdrawalRequest,
 );
 
 export default router;
