@@ -12,7 +12,7 @@ router.get(
 	PaymentsController.getPaymentRequest,
 );
 
-router.post(
+router.get(
 	'/lnd/withdrawals/',
 	PaymentValidator.getPaymentRequest(),
 	Validation.validate,
