@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import FormatResponse from '../util/FormatResponse';
 import { HttpCodes } from '../util/HttpCodes';
 import DatabaseService from '../services/UserBalanceService';
+import { lnd } from '..';
 
 export interface ResponseDto<T> {
 	success: boolean;
@@ -22,6 +23,7 @@ class PaymentsController {
 
 		try {
 			const paymentRequest = await LightningService.requestPayment(
+				lnd,
 				Number(amount),
 				userEmail,
 			);

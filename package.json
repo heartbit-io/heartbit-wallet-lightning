@@ -55,6 +55,7 @@
     "express-validator": "^7.0.1",
     "helmet": "^6.1.5",
     "lightning": "^8.0.0",
+    "lnurl": "^0.24.2",
     "pg": "^8.10.0",
     "pg-hstore": "^2.3.4",
     "reflect-metadata": "^0.1.13",

@@ -5,12 +5,12 @@ import PaymentValidator from '../lib/PaymentValidator';
 
 const router = Router();
 
-router.get(
-	'/lnd/deposits/',
-	PaymentValidator.getPaymentRequest(),
-	Validation.validate,
-	PaymentsController.getPaymentRequest,
-);
+// router.get(
+// 	'/lnd/deposits/',
+// 	PaymentValidator.getPaymentRequest(),
+// 	Validation.validate,
+// 	PaymentsController.getPaymentRequest,
+// );
 
 router.get(
 	'/lnd/withdrawals/',
