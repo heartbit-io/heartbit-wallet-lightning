@@ -1,41 +1,49 @@
-import * as dotenv from 'dotenv';
-import { once } from 'events';
-import * as lightning from 'lightning';
+import {
+	AuthenticatedLnd,
+	getWalletInfo,
+	CreateInvoiceResult,
+	createInvoice,
+	GetWalletInfoResult,
+	addPeer,
+	OpenChannelResult,
+	openChannel,
+	CloseChannelResult,
+	closeChannel,
+	PayResult,
+	pay,
+	DecodePaymentRequestResult,
+	GetChainAddressesResult,
+	decodePaymentRequest,
+	getChainAddresses,
+	getChainBalance,
+	subscribeToInvoices,
+	subscribeToPayments,
+} from 'lightning';
 import { EventEmitter } from 'stream';
 
-dotenv.config();
-
-const LND_TLS = process.env.LND_TLS as string;
-const LND_MACAROON = process.env.LND_MACAROON as string;
-const LND_SOCKET = process.env.LND_SOCKET as string;
-
 class LightningService {
-	static getLNDAdmin = async (): Promise<lightning.AuthenticatedLnd> => {
-		const { lnd } = lightning.authenticatedLndGrpc({
-			cert: LND_TLS,
-			macaroon: LND_MACAROON,
-			socket: LND_SOCKET,
-		});
-		// lnd is necessry arg for most of methods
-		return lnd as lightning.AuthenticatedLnd;
+	static connectionStatus = async (lnd: AuthenticatedLnd): Promise<boolean> => {
+		const walletInfo = await getWalletInfo({ lnd });
+		if (walletInfo.public_key) {
+			return true;
+		}
+		return false;
 	};
 
 	static getLNDWalletInfo = async (
-		lnd: lightning.AuthenticatedLnd,
-	): Promise<lightning.GetWalletInfoResult> => {
-		const wallet: lightning.GetWalletInfoResult = await lightning.getWalletInfo(
-			{ lnd },
-		);
+		lnd: AuthenticatedLnd,
+	): Promise<GetWalletInfoResult> => {
+		const wallet: GetWalletInfoResult = await getWalletInfo({ lnd });
 		// wallet of lnd
 		return wallet;
 	};
 
 	static connectToPeer = async (
-		lnd: lightning.AuthenticatedLnd,
+		lnd: AuthenticatedLnd,
 		socket: string,
 		publicKey: string,
 	): Promise<void> => {
-		const peer: void = await lightning.addPeer({
+		const peer: void = await addPeer({
 			lnd,
 			socket,
 			public_key: publicKey,
@@ -43,12 +51,12 @@ class LightningService {
 	};
 
 	static createChannel = async (
-		lnd: lightning.AuthenticatedLnd,
+		lnd: AuthenticatedLnd,
 		publicKey: string,
 		channelSize: number,
-	): Promise<lightning.OpenChannelResult> => {
+	): Promise<OpenChannelResult> => {
 		// channelSize must be >= 1000000;
-		const channel: lightning.OpenChannelResult = await lightning.openChannel({
+		const channel: OpenChannelResult = await openChannel({
 			lnd,
 			local_tokens: channelSize,
 			partner_public_key: publicKey,
@@ -58,43 +66,41 @@ class LightningService {
 	};
 
 	static closeChannel = async (
-		lnd: lightning.AuthenticatedLnd,
-		channel: lightning.OpenChannelResult,
-	): Promise<lightning.CloseChannelResult> => {
-		const closedChannel: lightning.CloseChannelResult =
-			await lightning.closeChannel({
-				lnd,
-				...channel,
-			});
+		lnd: AuthenticatedLnd,
+		channel: OpenChannelResult,
+	): Promise<CloseChannelResult> => {
+		const closedChannel: CloseChannelResult = await closeChannel({
+			lnd,
+			...channel,
+		});
 
 		return closedChannel;
 	};
 
 	static requestPayment = async (
-		lnd: lightning.AuthenticatedLnd,
+		lnd: AuthenticatedLnd,
 		amount: number,
 		description?: string,
-	): Promise<lightning.CreateInvoiceResult> => {
+	): Promise<CreateInvoiceResult> => {
 		/*
-            there's no "address" in lightning network
-            only way to transfer is by creating invoice,
-            which expires in 72 hours
-        */
-		const invoice: lightning.CreateInvoiceResult =
-			await lightning.createInvoice({
-				lnd,
-				tokens: amount,
-				description: description,
-			});
+	        there's no "address" in lightning network
+	        only way to transfer is by creating invoice,
+	        which expires in 72 hours
+	    */
+		const invoice: CreateInvoiceResult = await createInvoice({
+			lnd,
+			tokens: amount,
+			description: description,
+		});
 		// invoice to show client
 		return invoice;
 	};
 
 	static makePayment = async (
-		lnd: lightning.AuthenticatedLnd,
+		lnd: AuthenticatedLnd,
 		invoiceRequest: string,
-	): Promise<lightning.PayResult> => {
-		const paymentReceipt: lightning.PayResult = await lightning.pay({
+	): Promise<PayResult> => {
+		const paymentReceipt: PayResult = await pay({
 			lnd,
 			request: invoiceRequest,
 		});
@@ -103,28 +109,37 @@ class LightningService {
 	};
 
 	static getBtcAddressList = async (
-		lnd: lightning.AuthenticatedLnd,
-	): Promise<lightning.GetChainAddressesResult> => {
-		const btcAddressList: lightning.GetChainAddressesResult =
-			await lightning.getChainAddresses({ lnd });
+		lnd: AuthenticatedLnd,
+	): Promise<GetChainAddressesResult> => {
+		const btcAddressList: GetChainAddressesResult = await getChainAddresses({
+			lnd,
+		});
 
 		return btcAddressList;
 	};
 
-	static getBtcBalance = async (
-		lnd: lightning.AuthenticatedLnd,
-	): Promise<number> => {
-		const { chain_balance } = await lightning.getChainBalance({ lnd });
+	static decodeInvoice = async (
+		lnd: AuthenticatedLnd,
+		request: string,
+	): Promise<DecodePaymentRequestResult> => {
+		return await decodePaymentRequest({
+			lnd,
+			request,
+		});
+	};
+
+	static getBtcBalance = async (lnd: AuthenticatedLnd): Promise<number> => {
+		const { chain_balance } = await getChainBalance({ lnd });
 		return chain_balance;
 	};
 
 	static withdrawalEventOn = async (
-		lnd: lightning.AuthenticatedLnd,
+		lnd: AuthenticatedLnd,
 		onConfirm: Function,
 		onFail: Function,
 		onPaying?: Function,
 	): Promise<void> => {
-		const eventSubscriber: EventEmitter = lightning.subscribeToPayments({
+		const eventSubscriber: EventEmitter = subscribeToPayments({
 			lnd,
 		});
 		eventSubscriber.on('confirmed', event => onConfirm(event));
@@ -135,10 +150,10 @@ class LightningService {
 	};
 
 	static depositEventOn = async (
-		lnd: lightning.AuthenticatedLnd,
+		lnd: AuthenticatedLnd,
 		onReceive: Function,
 	): Promise<void> => {
-		const eventSubscriber: EventEmitter = lightning.subscribeToInvoices({
+		const eventSubscriber: EventEmitter = subscribeToInvoices({
 			lnd,
 		});
 		eventSubscriber.on('invoice_updated', event => onReceive(event));
