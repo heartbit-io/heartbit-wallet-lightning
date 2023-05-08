@@ -7,13 +7,13 @@ class FormatResponse {
 
 	message: string;
 
-	data: null | object;
+	data: null | object | string;
 
 	constructor(
 		success: boolean,
 		statusCode: HttpCodes,
 		message: string | any,
-		data: object | null,
+		data: object | string | null,
 	) {
 		this.success = success;
 		this.statusCode = statusCode;

@@ -5,9 +5,10 @@ import cors from 'cors';
 import { initNode } from './util/lndConnection';
 import LightningService from './services/LightningService';
 import { AuthenticatedLnd } from 'lightning';
+import env from './config/env';
 
 const app: Express = express();
-const port = 8080;
+const port = Number(env.SERVER_PORT);
 
 app.use(helmet());
 app.use(cors());

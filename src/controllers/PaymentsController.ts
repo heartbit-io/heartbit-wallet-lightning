@@ -2,8 +2,10 @@ import LightningService from '../services/LightningService';
 import { Request, Response } from 'express';
 import FormatResponse from '../util/FormatResponse';
 import { HttpCodes } from '../util/HttpCodes';
-import DatabaseService from '../services/UserBalanceService';
+import UserBalanceService from '../services/UserBalanceService';
 import { lnd } from '..';
+import lnurlServer from '../util/lnurlServer';
+import * as lnurlWithdraw from 'lnurl-withdraw';
 
 export interface ResponseDto<T> {
 	success: boolean;
@@ -34,8 +36,8 @@ class PaymentsController {
 					new FormatResponse(
 						true,
 						HttpCodes.OK,
-						'Payment request generated successfully',
-						paymentRequest,
+						'Payment request created successfully',
+						paymentRequest.request,
 					),
 				);
 		} catch (error) {
@@ -60,9 +62,11 @@ class PaymentsController {
 
 		const email = request.query.email as string;
 
+		const requestAmount = Number(amount);
+
 		try {
 			//check that user has enough balance
-			const user = await DatabaseService.getUserBtcBalance(email);
+			const user = await UserBalanceService.getUserBtcBalance(email);
 
 			if (!user) {
 				return response
@@ -79,7 +83,7 @@ class PaymentsController {
 
 			const userBalance = user.get('btcBalance') as number;
 
-			if (userBalance < Number(amount)) {
+			if (userBalance < requestAmount) {
 				return response
 					.status(HttpCodes.UNPROCESSED_CONTENT)
 					.json(
@@ -92,9 +96,27 @@ class PaymentsController {
 					);
 			}
 
+			const tag = 'withdrawRequest';
+			//need to convert amount to sats
+			// const satoshis = requestAmount * 100000000;
+
+			const params = {
+				minWithdrawable: 1000,
+				maxWithdrawable: requestAmount,
+				defaultDescription: 'Withdraw from Heartbit',
+			};
+			const options = {
+				uses: 1,
+			};
+
+			const withdrawRequest = await lnurlServer.generateNewUrl(
+				tag,
+				params,
+				options,
+			);
+
 			// TODO: implement withdrawal url using lnurl
 			// const payment = await LightningService.makePayment(invoice);
-
 			// if (!payment.is_confirmed) {
 			// 	return response
 			// 		.status(HttpCodes.UNPROCESSED_CONTENT)

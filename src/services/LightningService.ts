@@ -1,4 +1,3 @@
-import { once } from 'events';
 import {
 	AuthenticatedLnd,
 	getWalletInfo,
