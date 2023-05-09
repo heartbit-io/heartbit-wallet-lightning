@@ -1,7 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 
 import { TxTypes } from '../enums/TxTypes';
-import dbconnection from '../util/dbconnection';
+import dbconnection from '../util/dbConnection';
 
 export interface TransactionAttributes {
 	id?: number;

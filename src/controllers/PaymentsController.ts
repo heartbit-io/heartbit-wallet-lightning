@@ -60,6 +60,10 @@ class PaymentsController {
 
 		const email = request.query.email as string;
 
+		const userBalance = await UserBalanceService.getUserBtcBalance(email);
+
+		console.log(userBalance?.btcBalance);
+
 		const requestAmount = Number(amount);
 		try {
 			//check that user has enough balance
