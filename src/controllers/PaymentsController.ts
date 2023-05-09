@@ -116,7 +116,7 @@ class PaymentsController {
 					new FormatResponse(
 						true,
 						HttpCodes.OK,
-						'Withdrawal successful',
+						'Withdrawal created successfully',
 						withdrawRequest.encoded,
 					),
 				);
