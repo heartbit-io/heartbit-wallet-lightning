@@ -5,7 +5,6 @@ import { HttpCodes } from '../util/HttpCodes';
 import UserBalanceService from '../services/UserBalanceService';
 import { lnd } from '..';
 import lnurlServer from '../util/lnurlServer';
-import * as lnurlWithdraw from 'lnurl-withdraw';
 
 export interface ResponseDto<T> {
 	success: boolean;
@@ -29,7 +28,6 @@ class PaymentsController {
 				Number(amount),
 				userEmail,
 			);
-
 			return response
 				.status(200)
 				.json(
@@ -63,7 +61,6 @@ class PaymentsController {
 		const email = request.query.email as string;
 
 		const requestAmount = Number(amount);
-
 		try {
 			//check that user has enough balance
 			const user = await UserBalanceService.getUserBtcBalance(email);
@@ -97,13 +94,11 @@ class PaymentsController {
 			}
 
 			const tag = 'withdrawRequest';
-			//need to convert amount to sats
-			// const satoshis = requestAmount * 100000000;
-
+			const amountInmsat = requestAmount * 1000;
 			const params = {
 				minWithdrawable: 1000,
-				maxWithdrawable: requestAmount,
-				defaultDescription: 'Withdraw from Heartbit',
+				maxWithdrawable: amountInmsat,
+				defaultDescription: email,
 			};
 			const options = {
 				uses: 1,
@@ -115,29 +110,63 @@ class PaymentsController {
 				options,
 			);
 
-			// TODO: implement withdrawal url using lnurl
-			// const payment = await LightningService.makePayment(invoice);
-			// if (!payment.is_confirmed) {
-			// 	return response
-			// 		.status(HttpCodes.UNPROCESSED_CONTENT)
-			// 		.json(
-			// 			new FormatResponse(
-			// 				false,
-			// 				HttpCodes.UNPROCESSED_CONTENT,
-			// 				'Payment failed',
-			// 				null,
-			// 			),
-			// 		);
-			// }
-			// //update user balance
-
-			// const newBalance = userBalance - amount;
-			// await DatabaseService.updateUserBtcBalance(email, newBalance);
-
 			return response
 				.status(HttpCodes.OK)
 				.json(
-					new FormatResponse(true, HttpCodes.OK, 'Withdrawal successful', user),
+					new FormatResponse(
+						true,
+						HttpCodes.OK,
+						'Withdrawal successful',
+						withdrawRequest.encoded,
+					),
+				);
+		} catch (error) {
+			return response
+				.status(HttpCodes.INTERNAL_SERVER_ERROR)
+				.json(
+					new FormatResponse(
+						false,
+						HttpCodes.INTERNAL_SERVER_ERROR,
+						error,
+						null,
+					),
+				);
+		}
+	}
+
+	async payInvoice(request: Request, response: Response) {
+		let { invoice } = request.query;
+		if (!invoice) {
+			return response
+				.status(HttpCodes.BAD_REQUEST)
+				.json(
+					new FormatResponse(
+						false,
+						HttpCodes.BAD_REQUEST,
+						'Invoice not provided',
+						null,
+					),
+				);
+		}
+		try {
+			invoice = invoice as string;
+			const payment = await LightningService.makePayment(lnd, invoice);
+			if (!payment.is_confirmed) {
+				return response
+					.status(HttpCodes.UNPROCESSED_CONTENT)
+					.json(
+						new FormatResponse(
+							false,
+							HttpCodes.UNPROCESSED_CONTENT,
+							'Payment failed',
+							null,
+						),
+					);
+			}
+			return response
+				.status(HttpCodes.OK)
+				.json(
+					new FormatResponse(true, HttpCodes.OK, 'Payment successful', payment),
 				);
 		} catch (error) {
 			return response
