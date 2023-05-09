@@ -33,6 +33,12 @@ try {
 		} else {
 			throw new Error('[server]: LND node connection failed');
 		}
+		await LightningService.depositEventOn(lnd, () => 'onReceive');
+		await LightningService.withdrawalEventOn(
+			lnd,
+			() => 'onConfirm',
+			() => 'onFail',
+		);
 	});
 } catch (error) {
 	console.log(error);
