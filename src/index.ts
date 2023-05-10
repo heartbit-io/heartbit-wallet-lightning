@@ -6,6 +6,9 @@ import { initNode } from './util/lndConnection';
 import LightningService from './services/LightningService';
 import { AuthenticatedLnd } from 'lightning';
 import env from './config/env';
+import { TxTypes } from './enums/TxTypes';
+import TransactionService from './services/TransactionService';
+import UserBalanceService from './services/UserBalanceService';
 
 const app: Express = express();
 const port = Number(env.SERVER_PORT);
@@ -23,8 +26,8 @@ app.get('/', (req: Request, res: Response) => {
 
 let lnd: AuthenticatedLnd;
 
-try {
-	app.listen(port, async () => {
+app.listen(port, async () => {
+	try {
 		console.log(`[server]: Server is running at <https://localhost>:${port}`);
 		lnd = await initNode();
 		const status = await LightningService.connectionStatus(lnd);
@@ -33,15 +36,45 @@ try {
 		} else {
 			throw new Error('[server]: LND node connection failed');
 		}
-		await LightningService.depositEventOn(lnd, () => 'onReceive');
+		await LightningService.depositEventOn(lnd, async (event: any) => {
+			const { description, is_confirmed, received } = event;
+
+			//log to file
+			if (!is_confirmed) return;
+
+			const amount = Number(received);
+
+			const email = description ? description : null;
+
+			if (!email) return;
+			const userBalance = await UserBalanceService.getUserBtcBalance(email);
+
+			let userBtcBalance = 0;
+			if (userBalance) {
+				userBtcBalance = userBalance.get('btcBalance') as number;
+			}
+
+			const newBalance = userBtcBalance + Number(amount);
+
+			await UserBalanceService.updateUserBtcBalance(email, newBalance);
+
+			//save transaction
+			await TransactionService.createTransaction({
+				amount: Number(amount),
+				fromUserPubkey: 'user_deposit',
+				toUserPubkey: email,
+				fee: 0,
+				type: TxTypes.DEPOSIT,
+			});
+		});
 		await LightningService.withdrawalEventOn(
 			lnd,
-			() => 'onConfirm',
+			() => 'onSuccess',
 			() => 'onFail',
 		);
-	});
-} catch (error) {
-	console.log(error);
-}
+	} catch (error) {
+		console.log(error);
+	}
+});
 
 export { lnd };

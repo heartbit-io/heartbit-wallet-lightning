@@ -77,33 +77,33 @@ lnurlServer.on(
 );
 
 //we did not request payment through lnurl so this event is not used
-lnurlServer.on('payRequest:action:processed', async (event: any) => {
-	const { params, result } = event;
+// lnurlServer.on('payRequest:action:processed', async (event: any) => {
+// 	const { params, result } = event;
 
-	const { id, amount, tag } = result;
+// 	const { id, amount, tag } = result;
 
-	const { email } = params;
+// 	const { email } = params;
 
-	const userBalance = await UserBalanceService.getUserBtcBalance(email);
+// 	const userBalance = await UserBalanceService.getUserBtcBalance(email);
 
-	let userBtcBalance = 0;
-	if (userBalance) {
-		userBtcBalance = userBalance.get('btcBalance') as number;
-	}
+// 	let userBtcBalance = 0;
+// 	if (userBalance) {
+// 		userBtcBalance = userBalance.get('btcBalance') as number;
+// 	}
 
-	const newBalance = userBtcBalance + Number(amount);
+// 	const newBalance = userBtcBalance + Number(amount);
 
-	await UserBalanceService.updateUserBtcBalance(email, newBalance);
+// 	await UserBalanceService.updateUserBtcBalance(email, newBalance);
 
-	//save transaction
-	await TransactionService.createTransaction({
-		id,
-		amount: Number(amount),
-		fromUserPubkey: tag,
-		toUserPubkey: email,
-		fee: 0,
-		type: TxTypes.DEPOSIT,
-	});
-});
+// 	//save transaction
+// 	await TransactionService.createTransaction({
+// 		id,
+// 		amount: Number(amount),
+// 		fromUserPubkey: tag,
+// 		toUserPubkey: email,
+// 		fee: 0,
+// 		type: TxTypes.DEPOSIT,
+// 	});
+// });
 
 export default lnurlServer;
