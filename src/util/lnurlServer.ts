@@ -1,5 +1,8 @@
 const lnurl = require('lnurl');
 import env from '../config/env';
+import UserBalanceService from '../services/UserBalanceService';
+import TransactionService from '../services/TransactionService';
+import { TxTypes } from '../enums/TxTypes';
 
 const lnurlServer = lnurl.createServer({
 	host: 'localhost',
@@ -30,5 +33,47 @@ const lnurlServer = lnurl.createServer({
 		},
 	},
 });
+
+lnurlServer.on(
+	'withdrawRequest:action:processed',
+	async (event: { secret: any; params: any; result: any }) => {
+		const { params, result } = event;
+
+		const { id, amount, fee, tag } = result;
+
+		const { email } = params;
+
+		const feePercent = 0.01;
+
+		const userBalance = await UserBalanceService.getUserBtcBalance(email);
+
+		let userBtcBalance = 0;
+		if (userBalance) {
+			userBtcBalance = userBalance.get('btcBalance') as number;
+		}
+
+		const localTxFee = feePercent * Number(amount);
+		const totalFee = Number(fee) + localTxFee;
+
+		const totalAmount = Number(amount) + totalFee;
+
+		const newBalance = userBtcBalance - totalAmount;
+
+		await UserBalanceService.updateUserBtcBalance(email, newBalance);
+
+		//save transaction
+		await TransactionService.createTransaction({
+			id,
+			amount: totalAmount,
+			fromUserPubkey: tag,
+			toUserPubkey: email,
+			fee: totalFee,
+			type: TxTypes.WITHDRAW,
+		});
+
+		//log event
+		//send email to user
+	},
+);
 
 export default lnurlServer;

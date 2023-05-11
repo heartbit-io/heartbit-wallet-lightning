@@ -1,5 +1,4 @@
-import { UserInstance } from '../models/Usermodel';
-
+import { UserInstance } from '../models/UserModel';
 class UserBalanceService {
 	async getUserBtcBalance(userEmail: string) {
 		return await UserInstance.findOne({ where: { email: userEmail } });
