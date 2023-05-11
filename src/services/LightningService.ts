@@ -20,6 +20,7 @@ import {
 	subscribeToPayments,
 } from 'lightning';
 import { EventEmitter } from 'stream';
+import logger from '../util/logger';
 
 class LightningService {
 	static connectionStatus = async (lnd: AuthenticatedLnd): Promise<boolean> => {
@@ -143,7 +144,10 @@ class LightningService {
 			lnd,
 		});
 		eventSubscriber.on('confirmed', event => onConfirm(event));
-		eventSubscriber.on('failed', event => onFail(event));
+		eventSubscriber.on('failed', event => {
+			logger.error(event);
+			onFail(event);
+		});
 		onPaying === undefined
 			? ''
 			: eventSubscriber.on('paying', event => onPaying(event));

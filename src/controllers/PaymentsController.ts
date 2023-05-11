@@ -5,6 +5,7 @@ import { HttpCodes } from '../util/HttpCodes';
 import UserBalanceService from '../services/UserBalanceService';
 import { lnd } from '..';
 import lnurlServer from '../util/lnurlServer';
+import logger from '../util/logger';
 
 export interface ResponseDto<T> {
 	success: boolean;
@@ -39,6 +40,7 @@ class PaymentsController {
 					),
 				);
 		} catch (error) {
+			logger.error(error);
 			return response
 				.status(HttpCodes.INTERNAL_SERVER_ERROR)
 				.json(
@@ -109,7 +111,7 @@ class PaymentsController {
 				params,
 				options,
 			);
-
+			logger.info(withdrawRequest);
 			return response
 				.status(HttpCodes.OK)
 				.json(
@@ -121,6 +123,7 @@ class PaymentsController {
 					),
 				);
 		} catch (error) {
+			logger.error(error);
 			return response
 				.status(HttpCodes.INTERNAL_SERVER_ERROR)
 				.json(
@@ -169,6 +172,7 @@ class PaymentsController {
 					new FormatResponse(true, HttpCodes.OK, 'Payment successful', payment),
 				);
 		} catch (error) {
+			logger.error(error);
 			return response
 				.status(HttpCodes.INTERNAL_SERVER_ERROR)
 				.json(
