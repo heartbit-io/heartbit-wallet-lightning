@@ -3,6 +3,7 @@ import env from '../config/env';
 import UserBalanceService from '../services/UserBalanceService';
 import TransactionService from '../services/TransactionService';
 import { TxTypes } from '../enums/TxTypes';
+import logger from './logger';
 
 const lnurlServer = lnurl.createServer({
 	host: 'localhost',
@@ -37,6 +38,7 @@ const lnurlServer = lnurl.createServer({
 lnurlServer.on(
 	'withdrawRequest:action:processed',
 	async (event: { secret: any; params: any; result: any }) => {
+		logger.info(event);
 		const { params, result } = event;
 
 		const { id, amount, fee, tag } = result;
@@ -71,9 +73,12 @@ lnurlServer.on(
 			type: TxTypes.WITHDRAW,
 		});
 
-		//log event
 		//send email to user
 	},
 );
+
+lnurlServer.on('withdrawRequest:action:failed', (event: any) => {
+	logger.error(event);
+});
 
 export default lnurlServer;

@@ -9,6 +9,7 @@ import env from './config/env';
 import { TxTypes } from './enums/TxTypes';
 import TransactionService from './services/TransactionService';
 import UserBalanceService from './services/UserBalanceService';
+import logger from './util/logger';
 
 const app: Express = express();
 const port = Number(env.SERVER_PORT);
@@ -34,12 +35,12 @@ app.listen(port, async () => {
 		if (status) {
 			console.log('[server]: LND node connection successful');
 		} else {
+			logger.error('[server]: LND node connection failed');
 			throw new Error('[server]: LND node connection failed');
 		}
 		await LightningService.depositEventOn(lnd, async (event: any) => {
 			const { description, is_confirmed, received } = event;
-
-			//log to file
+			logger.info({ ...event });
 			if (!is_confirmed) return;
 
 			const amount = Number(received);
@@ -58,7 +59,6 @@ app.listen(port, async () => {
 
 			await UserBalanceService.updateUserBtcBalance(email, newBalance);
 
-			//save transaction
 			await TransactionService.createTransaction({
 				amount: Number(amount),
 				fromUserPubkey: 'user_deposit',
@@ -67,13 +67,15 @@ app.listen(port, async () => {
 				type: TxTypes.DEPOSIT,
 			});
 		});
+
 		await LightningService.withdrawalEventOn(
 			lnd,
-			() => 'onSuccess',
+			() => 'onConfirm',
 			() => 'onFail',
 		);
 	} catch (error) {
-		console.log(error);
+		console.error(error);
+		logger.error(error);
 	}
 });
 
