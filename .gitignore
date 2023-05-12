@@ -9,3 +9,9 @@ logs/
 files
 admin.macaroon
 tls.cert
+
+.elasticbeanstalk/
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

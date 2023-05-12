@@ -1,7 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 
 import { TxTypes } from '../enums/TxTypes';
-import dbconnection from '../util/dbConnection';
+import dbConnection from '../util/dbConnection';
 
 export interface TransactionAttributes {
 	id?: number;
@@ -63,7 +63,7 @@ TransactionInstance.init(
 		},
 	},
 	{
-		sequelize: dbconnection,
+		sequelize: dbConnection,
 		tableName: 'transactions',
 		timestamps: true,
 		paranoid: true,
