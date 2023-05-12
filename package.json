@@ -2,6 +2,9 @@
   "name": "heartbit-wallet-lightning",
   "version": "1.0.0",
   "description": "heartbit wallet server to run lightning node",
+  "engines": {
+    "node": "v18.15.0"
+  },
   "main": "index.js",
   "scripts": {
     "dev": "npx nodemon",

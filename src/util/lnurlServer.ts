@@ -1,14 +1,15 @@
 const lnurl = require('lnurl');
-import env from '../config/env';
-import UserBalanceService from '../services/UserBalanceService';
+
 import TransactionService from '../services/TransactionService';
 import { TxTypes } from '../enums/TxTypes';
+import UserBalanceService from '../services/UserBalanceService';
+import env from '../config/env';
 import logger from './logger';
 
 const lnurlServer = lnurl.createServer({
 	host: 'localhost',
-	url: `http://localhost:${env.SERVER_PORT}`,
-	port: env.SERVER_PORT,
+	url: `http://localhost:${env.LNURL_SERVER_PORT}`,
+	port: env.LNURL_SERVER_PORT,
 	endpoint: '/api/V1/lnurl/withdraw',
 	auth: {
 		apiKeys: [],

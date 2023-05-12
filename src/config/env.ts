@@ -18,6 +18,7 @@ const env = {
 	TEST_DB_NAME: process.env.TEST_DB_NAME as string,
 	LND_TLS_PATH: process.env.LND_TLS_PATH as string,
 	LND_MACAROON_PATH: process.env.LND_MACAROON_PATH as string,
+	LNURL_SERVER_PORT: process.env.LNURL_SERVER_PORT as string,
 };
 
 Object.entries(env).forEach(([key, value]) => {
