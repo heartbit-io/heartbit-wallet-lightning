@@ -112,6 +112,7 @@ class PaymentsController {
 				options,
 			);
 			logger.info(withdrawRequest);
+			console.log(withdrawRequest);
 			return response
 				.status(HttpCodes.OK)
 				.json(
