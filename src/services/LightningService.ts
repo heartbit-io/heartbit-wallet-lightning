@@ -146,6 +146,7 @@ class LightningService {
 		eventSubscriber.on('confirmed', event => onConfirm(event));
 		eventSubscriber.on('failed', event => {
 			logger.error(event);
+			console.log(event);
 			onFail(event);
 		});
 		onPaying === undefined

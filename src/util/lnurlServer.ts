@@ -40,6 +40,7 @@ lnurlServer.on(
 	'withdrawRequest:action:processed',
 	async (event: { secret: any; params: any; result: any }) => {
 		logger.info(event);
+		console.log(event);
 		const { params, result } = event;
 
 		const { id, amount, fee, tag } = result;
@@ -80,6 +81,7 @@ lnurlServer.on(
 
 lnurlServer.on('withdrawRequest:action:failed', (event: any) => {
 	logger.error(event);
+	console.log(event);
 });
 
 export default lnurlServer;

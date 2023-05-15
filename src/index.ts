@@ -41,6 +41,7 @@ app.listen(port, async () => {
 		await LightningService.depositEventOn(lnd, async (event: any) => {
 			const { description, is_confirmed, received } = event;
 			logger.info({ ...event });
+			console.log({ ...event });
 			if (!is_confirmed) return;
 
 			const amount = Number(received);
