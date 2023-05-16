@@ -10,6 +10,7 @@ import { TxTypes } from './enums/TxTypes';
 import TransactionService from './services/TransactionService';
 import UserBalanceService from './services/UserBalanceService';
 import logger from './util/logger';
+import TxRequestService from './services/TxRequestService';
 
 const app: Express = express();
 const port = Number(env.SERVER_PORT);
@@ -56,12 +57,12 @@ app.listen(port, async () => {
 				userBtcBalance = userBalance.get('btcBalance') as number;
 			}
 
-			const newBalance = userBtcBalance + Number(amount);
+			const newBalance = userBtcBalance + amount;
 
 			await UserBalanceService.updateUserBtcBalance(email, newBalance);
 
 			await TransactionService.createTransaction({
-				amount: Number(amount),
+				amount,
 				fromUserPubkey: 'user_deposit',
 				toUserPubkey: email,
 				fee: 0,
@@ -71,8 +72,66 @@ app.listen(port, async () => {
 
 		await LightningService.withdrawalEventOn(
 			lnd,
-			() => 'onConfirm',
-			() => 'onFail',
+			async (event: any) => {
+				const { confirmed_at, tokens, description, secret } = event;
+				// secret
+				console.log(event);
+				if (!confirmed_at) return;
+
+				const amount = Number(tokens) / 1000;
+
+				const email = description ? description : null;
+
+				if (!email) {
+					const userWithWithdrawRequest =
+						await TxRequestService.getTxRequestBySecret(secret);
+
+					if (userWithWithdrawRequest) {
+						const user_id = userWithWithdrawRequest.get('user_id');
+						const user = await UserBalanceService.getUserDetailsById(user_id);
+
+						if (user) {
+							const userBtcBalance = user.get('btcBalance') as number;
+							const newBalance = userBtcBalance - amount;
+							await UserBalanceService.updateUserBtcBalance(email, newBalance);
+							await TransactionService.createTransaction({
+								amount,
+								fromUserPubkey: email,
+								toUserPubkey: 'user_withdraw',
+								fee: 0,
+								type: TxTypes.WITHDRAW,
+							});
+
+							await TxRequestService.updateRequestStatus(secret);
+						}
+					}
+					return;
+				} else {
+					const userBalance = await UserBalanceService.getUserBtcBalance(email);
+
+					let userBtcBalance = 0;
+
+					if (userBalance) {
+						userBtcBalance = userBalance.get('btcBalance') as number;
+					}
+
+					const newBalance = userBtcBalance - amount;
+
+					await UserBalanceService.updateUserBtcBalance(email, newBalance);
+
+					await TransactionService.createTransaction({
+						amount,
+						fromUserPubkey: email,
+						toUserPubkey: 'user_withdraw',
+						fee: 0,
+						type: TxTypes.WITHDRAW,
+					});
+				}
+			},
+			(error: any) => {
+				console.log(error);
+				logger.error(error);
+			},
 		);
 	} catch (error) {
 		console.error(error);

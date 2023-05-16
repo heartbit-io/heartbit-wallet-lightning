@@ -11,6 +11,10 @@ class UserBalanceService {
 			await user.save();
 		}
 	}
+
+	async getUserDetailsById(userId: number) {
+		return await UserInstance.findOne({ where: { id: userId } });
+	}
 }
 
 export default new UserBalanceService();
