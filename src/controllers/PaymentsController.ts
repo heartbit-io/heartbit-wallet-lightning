@@ -115,7 +115,7 @@ class PaymentsController {
 
 			await TxRequestService.createTxRequest({
 				amount: requestAmount,
-				user_id: user.get('id') as number,
+				userId: user.get('id') as number,
 				secret: withdrawRequest.secret,
 			});
 

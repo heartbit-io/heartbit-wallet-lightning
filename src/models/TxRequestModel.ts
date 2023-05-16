@@ -4,7 +4,7 @@ import { TxRequestStatus } from '../enums/TxRequestStatus';
 
 export interface TxRequestAttributes {
 	id?: number;
-	user_id: number;
+	userId: number;
 	amount: number;
 	secret: string;
 	status?: string;
@@ -12,7 +12,7 @@ export interface TxRequestAttributes {
 
 export class TxRequestInstance extends Model<TxRequestAttributes> {
 	declare id: number;
-	declare user_id: number;
+	declare userId: number;
 	declare amount: number;
 	declare secret: string;
 	declare status: string;
@@ -29,7 +29,7 @@ TxRequestInstance.init(
 			autoIncrement: true,
 			primaryKey: true,
 		},
-		user_id: {
+		userId: {
 			type: DataTypes.INTEGER,
 		},
 		amount: {

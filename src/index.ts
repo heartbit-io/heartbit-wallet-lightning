@@ -87,8 +87,8 @@ app.listen(port, async () => {
 						await TxRequestService.getTxRequestBySecret(secret);
 
 					if (userWithWithdrawRequest) {
-						const user_id = userWithWithdrawRequest.get('user_id');
-						const user = await UserBalanceService.getUserDetailsById(user_id);
+						const userId = userWithWithdrawRequest.get('userId');
+						const user = await UserBalanceService.getUserDetailsById(userId);
 
 						if (user) {
 							email = user.get('email') as string;
