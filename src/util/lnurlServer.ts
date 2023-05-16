@@ -6,10 +6,15 @@ import UserBalanceService from '../services/UserBalanceService';
 import env from '../config/env';
 import logger from './logger';
 
+const host =
+	env.NODE_ENV === 'development'
+		? `localhost`
+		: 'https://dev-wallet-lnd-api.heartbit.io';
+
 const lnurlServer = lnurl.createServer({
-	host: 'localhost',
-	url: `http://localhost:${env.LNURL_SERVER_PORT}`,
-	port: env.LNURL_SERVER_PORT,
+	host,
+	url: `${host}:${env.SERVER_PORT}`,
+	port: env.SERVER_PORT,
 	endpoint: '/api/V1/lnurl/withdraw',
 	auth: {
 		apiKeys: [],
