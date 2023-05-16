@@ -80,7 +80,7 @@ app.listen(port, async () => {
 
 				const amount = Number(tokens) / 1000;
 
-				const email = description ? description : null;
+				let email = description ? description : null;
 
 				if (!email) {
 					const userWithWithdrawRequest =
@@ -91,42 +91,32 @@ app.listen(port, async () => {
 						const user = await UserBalanceService.getUserDetailsById(user_id);
 
 						if (user) {
-							const userBtcBalance = user.get('btcBalance') as number;
-							const newBalance = userBtcBalance - amount;
-							await UserBalanceService.updateUserBtcBalance(email, newBalance);
-							await TransactionService.createTransaction({
-								amount,
-								fromUserPubkey: email,
-								toUserPubkey: 'user_withdraw',
-								fee: 0,
-								type: TxTypes.WITHDRAW,
-							});
-
-							await TxRequestService.updateRequestStatus(secret);
+							email = user.get('email') as string;
 						}
 					}
-					return;
-				} else {
-					const userBalance = await UserBalanceService.getUserBtcBalance(email);
-
-					let userBtcBalance = 0;
-
-					if (userBalance) {
-						userBtcBalance = userBalance.get('btcBalance') as number;
-					}
-
-					const newBalance = userBtcBalance - amount;
-
-					await UserBalanceService.updateUserBtcBalance(email, newBalance);
-
-					await TransactionService.createTransaction({
-						amount,
-						fromUserPubkey: email,
-						toUserPubkey: 'user_withdraw',
-						fee: 0,
-						type: TxTypes.WITHDRAW,
-					});
 				}
+
+				if (!email) return;
+
+				const userBalance = await UserBalanceService.getUserBtcBalance(email);
+
+				let userBtcBalance = 0;
+
+				if (userBalance) {
+					userBtcBalance = userBalance.get('btcBalance') as number;
+				}
+
+				const newBalance = userBtcBalance - amount;
+
+				await UserBalanceService.updateUserBtcBalance(email, newBalance);
+
+				await TransactionService.createTransaction({
+					amount,
+					fromUserPubkey: email,
+					toUserPubkey: 'user_withdraw',
+					fee: 0,
+					type: TxTypes.WITHDRAW,
+				});
 			},
 			(error: any) => {
 				console.log(error);
