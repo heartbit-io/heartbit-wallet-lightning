@@ -2,7 +2,7 @@ import { DataTypes, Model } from 'sequelize';
 import dbconnection from '../util/dbconnection';
 import { TxRequestStatus } from '../enums/TxRequestStatus';
 
-export interface TxRequestAttributes {
+export interface TxRequestFields {
 	id?: number;
 	userId: number;
 	amount: number;
@@ -10,7 +10,7 @@ export interface TxRequestAttributes {
 	status?: string;
 }
 
-export class TxRequestInstance extends Model<TxRequestAttributes> {
+export class TxRequest extends Model<TxRequestFields> {
 	declare id: number;
 	declare userId: number;
 	declare amount: number;
@@ -21,7 +21,7 @@ export class TxRequestInstance extends Model<TxRequestAttributes> {
 	static associate(models: any) {}
 }
 
-TxRequestInstance.init(
+TxRequest.init(
 	{
 		id: {
 			type: DataTypes.INTEGER,

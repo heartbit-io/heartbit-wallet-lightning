@@ -1,6 +1,4 @@
 import { body, param, query } from 'express-validator';
-import DatabaseService from '../services/UserBalanceService';
-import { Request } from 'express';
 
 class PaymentValidator {
 	getPaymentRequest() {

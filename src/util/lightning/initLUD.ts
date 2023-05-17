@@ -1,10 +1,7 @@
 const lnurl = require('lnurl');
 
-import TransactionService from '../services/TransactionService';
-import { TxTypes } from '../enums/TxTypes';
-import UserBalanceService from '../services/UserBalanceService';
-import env from '../config/env';
-import logger from './logger';
+import env from '../../config/env';
+import logger from '../logger';
 
 const host =
 	env.NODE_ENV === 'development'
@@ -40,7 +37,7 @@ const lnurlServer = lnurl.createServer({
 		},
 	},
 });
-
+/*
 lnurlServer.on(
 	'withdrawRequest:action:processed',
 	async (event: { secret: any; params: any; result: any }) => {
@@ -83,7 +80,7 @@ lnurlServer.on(
 		//send email to user
 	},
 );
-
+*/
 lnurlServer.on('withdrawRequest:action:failed', (event: any) => {
 	logger.error(event);
 	console.log(event);

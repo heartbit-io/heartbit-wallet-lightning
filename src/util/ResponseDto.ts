@@ -1,19 +1,19 @@
 import { HttpCodes } from './HttpCodes';
 
-class FormatResponse {
+class ResponseDto<T> {
 	success: boolean;
 
 	statusCode: HttpCodes;
 
 	message: string;
 
-	data: null | object | string;
+	data: T;
 
 	constructor(
 		success: boolean,
 		statusCode: HttpCodes,
 		message: string | any,
-		data: object | string | null,
+		data: T,
 	) {
 		this.success = success;
 		this.statusCode = statusCode;
@@ -22,4 +22,4 @@ class FormatResponse {
 	}
 }
 
-export default FormatResponse;
+export default ResponseDto;

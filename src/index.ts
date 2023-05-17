@@ -2,15 +2,16 @@ import express, { Express, Request, Response } from 'express';
 import router from './routes';
 import helmet from 'helmet';
 import cors from 'cors';
-import { initNode } from './util/lndConnection';
-import LightningService from './services/LightningService';
+import initLND from './util/lightning/initLND';
+import LNDUtil from './util/lightning/LNDUtil';
 import { AuthenticatedLnd } from 'lightning';
 import env from './config/env';
 import { TxTypes } from './enums/TxTypes';
-import TransactionService from './services/TransactionService';
-import UserBalanceService from './services/UserBalanceService';
 import logger from './util/logger';
-import TxRequestService from './services/TxRequestService';
+import { User } from './models/UserModel';
+import { BtcTransaction } from './models/BtcTransactionModel';
+import { TxRequest } from './models/TxRequestModel';
+import { TxRequestStatus } from './enums/TxRequestStatus';
 
 const app: Express = express();
 const port = Number(env.SERVER_PORT);
@@ -31,15 +32,15 @@ let lnd: AuthenticatedLnd;
 app.listen(port, async () => {
 	try {
 		console.log(`[server]: Server is running at <https://localhost>:${port}`);
-		lnd = await initNode();
-		const status = await LightningService.connectionStatus(lnd);
+		lnd = await initLND();
+		const status = await LNDUtil.connectionStatus(lnd);
 		if (status) {
 			console.log('[server]: LND node connection successful');
 		} else {
 			logger.error('[server]: LND node connection failed');
 			throw new Error('[server]: LND node connection failed');
 		}
-		await LightningService.depositEventOn(lnd, async (event: any) => {
+		await LNDUtil.depositEventOn(lnd, async (event: any) => {
 			const { description, is_confirmed, received } = event;
 			logger.info({ ...event });
 			console.log({ ...event });
@@ -49,28 +50,25 @@ app.listen(port, async () => {
 
 			const email = description ? description : null;
 
-			if (!email) return;
-			const userBalance = await UserBalanceService.getUserBtcBalance(email);
+			if (!email) throw new Error('Email not found');
+			const user = await User.findOne({ where: { email: email } });
+			if (!user) throw new Error('User not found');
+			const currentBalance = user.get('btcBalance') as number;
 
-			let userBtcBalance = 0;
-			if (userBalance) {
-				userBtcBalance = userBalance.get('btcBalance') as number;
-			}
+			await user.update({ btcBalance: currentBalance + amount });
 
-			const newBalance = userBtcBalance + amount;
-
-			await UserBalanceService.updateUserBtcBalance(email, newBalance);
-
-			await TransactionService.createTransaction({
+			await BtcTransaction.create({
 				amount,
 				fromUserPubkey: 'user_deposit',
 				toUserPubkey: email,
 				fee: 0,
 				type: TxTypes.DEPOSIT,
 			});
+
+			await user.save();
 		});
 
-		await LightningService.withdrawalEventOn(
+		await LNDUtil.withdrawalEventOn(
 			lnd,
 			async (event: any) => {
 				const { confirmed_at, tokens, description, secret } = event;
@@ -83,12 +81,13 @@ app.listen(port, async () => {
 				let email = description ? description : null;
 
 				if (!email) {
-					const userWithWithdrawRequest =
-						await TxRequestService.getTxRequestBySecret(secret);
+					const userWithWithdrawRequest = await TxRequest.findOne({
+						where: { secret, status: TxRequestStatus.CREATED },
+					});
 
 					if (userWithWithdrawRequest) {
 						const userId = userWithWithdrawRequest.get('userId');
-						const user = await UserBalanceService.getUserDetailsById(userId);
+						const user = await User.findOne({ where: { id: userId } });
 
 						if (user) {
 							email = user.get('email') as string;
@@ -96,27 +95,21 @@ app.listen(port, async () => {
 					}
 				}
 
-				if (!email) return;
+				const user = await User.findOne({ where: { email: email } });
+				if (!user) throw new Error('User not found');
+				const currentBalance = user.get('btcBalance') as number;
 
-				const userBalance = await UserBalanceService.getUserBtcBalance(email);
+				await user.update({ btcBalance: currentBalance - amount });
 
-				let userBtcBalance = 0;
-
-				if (userBalance) {
-					userBtcBalance = userBalance.get('btcBalance') as number;
-				}
-
-				const newBalance = userBtcBalance - amount;
-
-				await UserBalanceService.updateUserBtcBalance(email, newBalance);
-
-				await TransactionService.createTransaction({
+				await BtcTransaction.create({
 					amount,
 					fromUserPubkey: email,
 					toUserPubkey: 'user_withdraw',
 					fee: 0,
 					type: TxTypes.WITHDRAW,
 				});
+
+				await user.save();
 			},
 			(error: any) => {
 				console.log(error);

@@ -1,7 +1,7 @@
-import env from '../config/env';
+import env from '../../config/env';
 import { authenticatedLndGrpc, AuthenticatedLnd } from 'lightning';
 
-async function initNode(): Promise<AuthenticatedLnd> {
+async function initLND(): Promise<AuthenticatedLnd> {
 	const connection = async (): Promise<AuthenticatedLnd> => {
 		const { lnd } = authenticatedLndGrpc({
 			cert: '',
@@ -13,4 +13,4 @@ async function initNode(): Promise<AuthenticatedLnd> {
 	return connection();
 }
 
-export { initNode };
+export default initLND;

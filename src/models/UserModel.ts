@@ -3,7 +3,7 @@ import { DataTypes, Model } from 'sequelize';
 import { UserRoles } from '../enums/UserRoles';
 import dbconnection from '../util/dbconnection';
 
-export interface UserAttributes {
+export interface UserFields {
 	id?: number;
 	pubkey: string;
 	email: string;
@@ -11,7 +11,7 @@ export interface UserAttributes {
 	btcBalance: number;
 }
 
-export class UserInstance extends Model<UserAttributes> {
+export class User extends Model<UserFields> {
 	declare id: number;
 	declare pubkey: string;
 	declare email: string;
@@ -26,7 +26,7 @@ export class UserInstance extends Model<UserAttributes> {
 	}
 }
 
-UserInstance.init(
+User.init(
 	{
 		id: {
 			type: DataTypes.INTEGER,
