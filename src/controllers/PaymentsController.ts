@@ -6,6 +6,7 @@ import UserBalanceService from '../services/UserBalanceService';
 import { lnd } from '..';
 import lnurlServer from '../util/lnurlServer';
 import logger from '../util/logger';
+import TxRequestService from '../services/TxRequestService';
 
 export interface ResponseDto<T> {
 	success: boolean;
@@ -111,7 +112,15 @@ class PaymentsController {
 				params,
 				options,
 			);
+
+			await TxRequestService.createTxRequest({
+				amount: requestAmount,
+				userId: user.get('id') as number,
+				secret: withdrawRequest.secret,
+			});
+
 			logger.info(withdrawRequest);
+
 			console.log(withdrawRequest);
 			return response
 				.status(HttpCodes.OK)
