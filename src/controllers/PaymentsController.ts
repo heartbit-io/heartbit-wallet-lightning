@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import ResponseDto from '../util/ResponseDto';
-import { HttpCodes } from '../util/HttpCodes';
-import logger from '../util/logger';
+import ResponseDto from '../dto/ResponseDto';
+import { HttpCodes } from '../enums/HttpCodes';
+import logger from '../utils/logger';
 import PaymentService from '../services/PaymentService';
 import { PayResult } from 'lightning';
 

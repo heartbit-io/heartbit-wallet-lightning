@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
-import { HttpCodes } from '../util/HttpCodes';
-import FormatResponse from './ResponseDto';
+import { HttpCodes } from '../enums/HttpCodes';
+import FormatResponse from '../dto/ResponseDto';
 
 class Validation {
 	validate(req: Request, res: Response, next: NextFunction) {

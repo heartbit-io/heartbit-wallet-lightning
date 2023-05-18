@@ -1,4 +1,4 @@
-import { HttpCodes } from './HttpCodes';
+import { HttpCodes } from '../enums/HttpCodes';
 
 class ResponseDto<T> {
 	success: boolean;

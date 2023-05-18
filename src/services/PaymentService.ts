@@ -1,11 +1,10 @@
-import LNDUtil from '../util/lightning/LNDUtil';
-import { HttpCodes } from '../util/HttpCodes';
-import { User } from '../models/UserModel';
-import { lnd } from '..';
-import lnurlServer from '../util/lightning/initLUD';
-import logger from '../util/logger';
-import { TxRequest } from '../models/TxRequestModel';
-import { CustomError } from '../lib/CustomError';
+import LNDUtil from '../utils/LNDUtil';
+import { HttpCodes } from '../enums/HttpCodes';
+import { User } from '../domains/models/UserModel';
+import { lnd, lud } from '..';
+import logger from '../utils/logger';
+import { TxRequest } from '../domains/models/TxRequestModel';
+import { CustomError } from '../libs/CustomError';
 import { PayResult } from 'lightning';
 
 class PaymentsService {
@@ -54,11 +53,7 @@ class PaymentsService {
 				uses: 1,
 			};
 
-			const withdrawRequest = await lnurlServer.generateNewUrl(
-				tag,
-				params,
-				options,
-			);
+			const withdrawRequest = await lud.generateNewUrl(tag, params, options);
 
 			await TxRequest.create({
 				amount: Number(amount),

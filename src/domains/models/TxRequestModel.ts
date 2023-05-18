@@ -1,6 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
-import dbconnection from '../util/dbconnection';
-import { TxRequestStatus } from '../enums/TxRequestStatus';
+import dbconnection from '../initDB';
+import { TxRequestStatus } from '../../enums/TxRequestStatus';
 
 export interface TxRequestFields {
 	id?: number;

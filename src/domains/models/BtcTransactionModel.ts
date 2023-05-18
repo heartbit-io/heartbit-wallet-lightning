@@ -1,7 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 
-import { TxTypes } from '../enums/TxTypes';
-import dbconnection from '../util/dbconnection';
+import { TxTypes } from '../../enums/TxTypes';
+import dbconnection from '../initDB';
 
 export interface BtcTransactionFields {
 	id?: number;

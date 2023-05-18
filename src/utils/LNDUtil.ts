@@ -20,7 +20,7 @@ import {
 	subscribeToPayments,
 } from 'lightning';
 import { EventEmitter } from 'stream';
-import logger from '../logger';
+import logger from './logger';
 
 class LNDUtil {
 	static connectionStatus = async (lnd: AuthenticatedLnd): Promise<boolean> => {

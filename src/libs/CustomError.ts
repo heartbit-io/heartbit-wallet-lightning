@@ -1,4 +1,4 @@
-import { HttpCodes } from '../util/HttpCodes';
+import { HttpCodes } from '../enums/HttpCodes';
 
 export class CustomError {
 	code: HttpCodes;

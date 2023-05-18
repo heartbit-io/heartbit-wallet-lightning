@@ -1,7 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 
-import { UserRoles } from '../enums/UserRoles';
-import dbconnection from '../util/dbconnection';
+import { UserRoles } from '../../enums/UserRoles';
+import dbconnection from '../initDB';
 
 export interface UserFields {
 	id?: number;
