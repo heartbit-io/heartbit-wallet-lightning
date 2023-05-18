@@ -1,7 +1,7 @@
 import { body, param, query } from 'express-validator';
 
 class PaymentValidator {
-	getPaymentRequest() {
+	static getPaymentRequest() {
 		return [
 			query('email')
 				.isString()
@@ -20,4 +20,4 @@ class PaymentValidator {
 	}
 }
 
-export default new PaymentValidator();
+export default PaymentValidator;

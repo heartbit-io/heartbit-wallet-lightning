@@ -1,19 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
 import { HttpCodes } from '../enums/HttpCodes';
-import FormatResponse from '../dto/ResponseDto';
+import ResponseDto from '../dto/ResponseDto';
 
-class Validation {
-	validate(req: Request, res: Response, next: NextFunction) {
+class HttpValidator {
+	static validate(req: Request, res: Response, next: NextFunction) {
 		const error = validationResult(req);
 		if (!error.isEmpty()) {
 			return res
 				.status(HttpCodes.BAD_REQUEST)
 				.json(
-					new FormatResponse(false, HttpCodes.BAD_REQUEST, error.array(), null),
+					new ResponseDto(false, HttpCodes.BAD_REQUEST, error.array(), null),
 				);
 		}
 		next();
 	}
 }
-export default new Validation();
+export default HttpValidator;

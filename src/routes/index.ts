@@ -1,21 +1,21 @@
 import { Router } from 'express';
 import PaymentsController from '../controllers/PaymentsController';
-import Validation from '../utils/Validator';
-import PaymentValidator from '../libs/PaymentValidator';
+import HttpValidator from '../utils/HttpValidator';
+import PaymentValidator from '../utils/PaymentValidator';
 
 const router = Router();
 
 router.get(
 	'/lnd/deposits/',
 	PaymentValidator.getPaymentRequest(),
-	Validation.validate,
+	HttpValidator.validate,
 	PaymentsController.getPaymentRequest,
 );
 
 router.get(
 	'/lnd/withdrawals/',
 	PaymentValidator.getPaymentRequest(),
-	Validation.validate,
+	HttpValidator.validate,
 	PaymentsController.getWithdrawalRequest,
 );
 
