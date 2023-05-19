@@ -1,7 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 
 import { UserRoles } from '../../enums/UserRoles';
-import dbconnection from '../initDB';
+import initDB from '../initDB';
 
 export interface UserFields {
 	id?: number;
@@ -54,7 +54,7 @@ User.init(
 		},
 	},
 	{
-		sequelize: dbconnection,
+		sequelize: initDB,
 		tableName: 'users',
 		timestamps: true,
 		paranoid: true,

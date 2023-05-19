@@ -1,7 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 
 import { TxTypes } from '../../enums/TxTypes';
-import dbconnection from '../initDB';
+import initDB from '../initDB';
 
 export interface BtcTransactionFields {
 	id?: number;
@@ -63,7 +63,7 @@ BtcTransaction.init(
 		},
 	},
 	{
-		sequelize: dbconnection,
+		sequelize: initDB,
 		tableName: 'transactions',
 		timestamps: true,
 		paranoid: true,

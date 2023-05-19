@@ -1,5 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
-import dbconnection from '../initDB';
+import initDB from '../initDB';
 import { TxRequestStatus } from '../../enums/TxRequestStatus';
 
 export interface TxRequestFields {
@@ -44,7 +44,7 @@ TxRequest.init(
 		},
 	},
 	{
-		sequelize: dbconnection,
+		sequelize: initDB,
 		tableName: 'txRequests',
 		timestamps: true,
 		paranoid: true,
