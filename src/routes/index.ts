@@ -7,14 +7,14 @@ const router = Router();
 
 router.get(
 	'/lnd/deposits/',
-	Validator.validateEmaliAndAmount,
+	Validator.validateEmaliAndAmount(),
 	ValidationHandler.handleError,
 	PaymentsController.getPaymentRequest,
 );
 
 router.get(
 	'/lnd/withdrawals/',
-	Validator.validateEmaliAndAmount,
+	Validator.validateEmaliAndAmount(),
 	ValidationHandler.handleError,
 	PaymentsController.getWithdrawalRequest,
 );
