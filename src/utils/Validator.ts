@@ -1,7 +1,7 @@
 import { body, param, query } from 'express-validator';
 
-class PaymentValidator {
-	static getPaymentRequest() {
+class Validator {
+	static validateEmaliAndAmount() {
 		return [
 			query('email')
 				.isString()
@@ -9,7 +9,7 @@ class PaymentValidator {
 				.isEmail()
 				.rtrim()
 				.escape()
-				.withMessage('supply a valid email'),
+				.withMessage('provide a valid email'),
 			query('amount')
 				.isNumeric()
 				.notEmpty()
@@ -18,6 +18,15 @@ class PaymentValidator {
 				),
 		];
 	}
+
+	static validateInvoice() {
+		return [
+			query('invoice')
+				.isString()
+				.notEmpty()
+				.withMessage('provide a valid invoice'),
+		];
+	}
 }
 
-export default PaymentValidator;
+export default Validator;

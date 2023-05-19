@@ -8,13 +8,16 @@ import { PayResult } from 'lightning';
 class PaymentsController {
 	async getPaymentRequest(
 		request: Request,
-		response: Response,
+		response: Response<ResponseDto<string | null>>,
 	): Promise<Response<ResponseDto<string>>> {
+		// type request first
+		const { email, amount } = request.query as unknown as {
+			email: string;
+			amount: number;
+		};
 		try {
-			const { email, amount } = request.query;
-
 			const paymentRequest: string = await PaymentService.getPaymentRequest(
-				email as string,
+				email,
 				Number(amount),
 			);
 
@@ -45,15 +48,16 @@ class PaymentsController {
 
 	async getWithdrawalRequest(
 		request: Request,
-		response: Response,
+		response: Response<ResponseDto<string | null>>,
 	): Promise<Response<ResponseDto<string>>> {
+		// type request first
+		const { email, amount } = request.query as unknown as {
+			email: string;
+			amount: number;
+		};
 		try {
-			const { email, amount } = request.query;
 			const withdrawalRequest: string =
-				await PaymentService.getWithdrawalRequest(
-					email as string,
-					Number(amount),
-				);
+				await PaymentService.getWithdrawalRequest(email, Number(amount));
 			return response
 				.status(HttpCodes.OK)
 				.json(
@@ -81,25 +85,12 @@ class PaymentsController {
 
 	async payInvoice(
 		request: Request,
-		response: Response,
-	): Promise<Response<ResponseDto<string>>> {
-		const { invoice } = request.query;
-		if (!invoice) {
-			return response
-				.status(HttpCodes.BAD_REQUEST)
-				.json(
-					new ResponseDto(
-						false,
-						HttpCodes.BAD_REQUEST,
-						'Invoice not provided',
-						null,
-					),
-				);
-		}
+		response: Response<ResponseDto<PayResult | null>>,
+	): Promise<Response<ResponseDto<PayResult>>> {
+		// type request first
+		const { invoice } = request.query as unknown as { invoice: string };
 		try {
-			const payment: PayResult = await PaymentService.payInvoice(
-				invoice as string,
-			);
+			const payment: PayResult = await PaymentService.payInvoice(invoice);
 			return response
 				.status(HttpCodes.OK)
 				.json(

@@ -3,8 +3,8 @@ import { validationResult } from 'express-validator';
 import { HttpCodes } from '../enums/HttpCodes';
 import ResponseDto from '../dto/ResponseDto';
 
-class HttpValidator {
-	static validate(req: Request, res: Response, next: NextFunction) {
+class ValidationHandler {
+	static handleError(req: Request, res: Response, next: NextFunction) {
 		const error = validationResult(req);
 		if (!error.isEmpty()) {
 			return res
@@ -16,4 +16,4 @@ class HttpValidator {
 		next();
 	}
 }
-export default HttpValidator;
+export default ValidationHandler;
