@@ -19,6 +19,6 @@ router.get(
 	PaymentsController.getWithdrawalRequest,
 );
 
-router.get('/lnurl/withdraw/', PaymentsController.payInvoice);
+router.get('/lnurl/withdrawals/', PaymentsController.payInvoice);
 
 export default router;

@@ -29,6 +29,7 @@ class PaymentsService {
 
 	async getWithdrawalRequest(email: string, amount: number): Promise<string> {
 		try {
+			/*
 			//check that user has enough balance
 			const user = await User.findOne({ where: { email: email } });
 
@@ -41,7 +42,7 @@ class PaymentsService {
 					HttpCodes.UNPROCESSED_CONTENT,
 					'Insufficient balance',
 				);
-
+*/
 			const tag = 'withdrawRequest';
 			const amountInmsat = Number(amount) * 1000;
 			const params = {
@@ -54,14 +55,13 @@ class PaymentsService {
 			};
 
 			const withdrawRequest = await lud.generateNewUrl(tag, params, options);
-
+			/*
 			await TxRequest.create({
 				amount: Number(amount),
 				userId: user.get('id') as number,
 				secret: withdrawRequest.secret,
 			});
-
-			logger.info(withdrawRequest);
+*/
 
 			return withdrawRequest.encoded;
 		} catch (error: any) {

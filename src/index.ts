@@ -9,7 +9,7 @@ import initLND from './config/initLND';
 import { AuthenticatedLnd } from 'lightning';
 import initLUD from './config/initLUD';
 import { onLNDDeposit, onLNDWithdrawal } from './events/LNDEvent';
-import { onLUDAll } from './events/LUDEvent';
+import { onLUDFail } from './events/LUDEvent';
 
 const app: Express = express();
 const port = Number(env.SERVER_PORT);
@@ -36,7 +36,7 @@ app.listen(port, async () => {
 		// init event listener for lnd and lud
 		await onLNDDeposit(lnd);
 		await onLNDWithdrawal(lnd);
-		await onLUDAll(lud);
+		await onLUDFail(lud);
 	} catch (error) {
 		console.error(error);
 		logger.error(error);

@@ -1,19 +1,14 @@
 const lnurl = require('lnurl');
 
 import env from './env';
-import logger from '../utils/logger';
-
-const host =
-	env.NODE_ENV === 'development'
-		? `localhost`
-		: 'https://dev-wallet-lnd-api.heartbit.io';
 
 async function initLUD(): Promise<any> {
-	const lud: any = lnurl.createServer({
-		host,
-		url: `${host}:${env.SERVER_PORT}`,
-		port: env.SERVER_PORT,
-		endpoint: '/api/V1/lnurl/withdraw',
+	const lud: any = await lnurl.createServer({
+		host: 'localhost', // should be localhost as point out local server
+		url: 'https://dev-wallet-lnd-api.heartbit.io', // url reached by external server
+		port: env.LUD_PORT, // different from express server port
+		listen: true,
+		endpoint: '/api/v1/lnurl/withdrawals',
 		auth: {
 			apiKeys: [],
 		},
@@ -37,11 +32,6 @@ async function initLUD(): Promise<any> {
 				},
 			},
 		},
-	});
-
-	lud.on('withdrawRequest:action:failed', (event: any) => {
-		logger.error(event);
-		console.log(event);
 	});
 
 	return lud;
