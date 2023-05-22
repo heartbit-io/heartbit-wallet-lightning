@@ -6,7 +6,8 @@ async function initLUD(): Promise<any> {
 	const lud: any = await lnurl.createServer({
 		host: 'localhost', // should be localhost as point out local server
 		url: 'https://dev-wallet-lnd-api.heartbit.io', // url reached by external server
-		port: env.LUD_PORT, // different from express server port
+		// url: 'localhost',
+		port: env.SERVER_PORT, // different from express server port
 		listen: true,
 		endpoint: '/api/v1/lnurl/withdrawals',
 		auth: {
