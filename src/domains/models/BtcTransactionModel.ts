@@ -1,9 +1,9 @@
 import { DataTypes, Model } from 'sequelize';
 
-import { TxTypes } from '../enums/TxTypes';
-import dbconnection from '../util/dbconnection';
+import { TxTypes } from '../../enums/TxTypes';
+import initDB from '../initDB';
 
-export interface TransactionAttributes {
+export interface BtcTransactionFields {
 	id?: number;
 	fromUserPubkey: string;
 	toUserPubkey: string;
@@ -11,7 +11,7 @@ export interface TransactionAttributes {
 	type: TxTypes;
 	fee: number;
 }
-export class TransactionInstance extends Model<TransactionAttributes> {
+export class BtcTransaction extends Model<BtcTransactionFields> {
 	declare id: number;
 	declare fromUserPubkey: string;
 	declare toUserPubkey: string;
@@ -24,7 +24,7 @@ export class TransactionInstance extends Model<TransactionAttributes> {
 	}
 }
 
-TransactionInstance.init(
+BtcTransaction.init(
 	{
 		id: {
 			type: DataTypes.INTEGER,
@@ -63,7 +63,7 @@ TransactionInstance.init(
 		},
 	},
 	{
-		sequelize: dbconnection,
+		sequelize: initDB,
 		tableName: 'transactions',
 		timestamps: true,
 		paranoid: true,

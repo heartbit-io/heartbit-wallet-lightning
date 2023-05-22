@@ -2,15 +2,15 @@ import express, { Express, Request, Response } from 'express';
 import router from './routes';
 import helmet from 'helmet';
 import cors from 'cors';
-import { initNode } from './util/lndConnection';
-import LightningService from './services/LightningService';
-import { AuthenticatedLnd } from 'lightning';
 import env from './config/env';
-import { TxTypes } from './enums/TxTypes';
-import TransactionService from './services/TransactionService';
-import UserBalanceService from './services/UserBalanceService';
-import logger from './util/logger';
-import TxRequestService from './services/TxRequestService';
+import logger from './utils/logger';
+
+import initLND from './config/initLND';
+import { AuthenticatedLnd } from 'lightning';
+import initLUD from './config/initLUD';
+import { onLNDDeposit, onLNDWithdrawal } from './events/LNDEvent';
+import { onLUDFail } from './events/LUDEvent';
+import initDB from './domains/initDB';
 
 const app: Express = express();
 const port = Number(env.SERVER_PORT);
@@ -27,106 +27,23 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 let lnd: AuthenticatedLnd;
+let lud: any;
 
 app.listen(port, async () => {
 	try {
-		console.log(`[server]: Server is running at <https://localhost>:${port}`);
-		lnd = await initNode();
-		const status = await LightningService.connectionStatus(lnd);
-		if (status) {
-			console.log('[server]: LND node connection successful');
-		} else {
-			logger.error('[server]: LND node connection failed');
-			throw new Error('[server]: LND node connection failed');
-		}
-		await LightningService.depositEventOn(lnd, async (event: any) => {
-			const { description, is_confirmed, received } = event;
-			logger.info({ ...event });
-			console.log({ ...event });
-			if (!is_confirmed) return;
-
-			const amount = Number(received);
-
-			const email = description ? description : null;
-
-			if (!email) return;
-			const userBalance = await UserBalanceService.getUserBtcBalance(email);
-
-			let userBtcBalance = 0;
-			if (userBalance) {
-				userBtcBalance = userBalance.get('btcBalance') as number;
-			}
-
-			const newBalance = userBtcBalance + amount;
-
-			await UserBalanceService.updateUserBtcBalance(email, newBalance);
-
-			await TransactionService.createTransaction({
-				amount,
-				fromUserPubkey: 'user_deposit',
-				toUserPubkey: email,
-				fee: 0,
-				type: TxTypes.DEPOSIT,
-			});
-		});
-
-		await LightningService.withdrawalEventOn(
-			lnd,
-			async (event: any) => {
-				const { confirmed_at, tokens, description, secret } = event;
-				// secret
-				console.log(event);
-				if (!confirmed_at) return;
-
-				const amount = Number(tokens) / 1000;
-
-				let email = description ? description : null;
-
-				if (!email) {
-					const userWithWithdrawRequest =
-						await TxRequestService.getTxRequestBySecret(secret);
-
-					if (userWithWithdrawRequest) {
-						const userId = userWithWithdrawRequest.get('userId');
-						const user = await UserBalanceService.getUserDetailsById(userId);
-
-						if (user) {
-							email = user.get('email') as string;
-						}
-					}
-				}
-
-				if (!email) return;
-
-				const userBalance = await UserBalanceService.getUserBtcBalance(email);
-
-				let userBtcBalance = 0;
-
-				if (userBalance) {
-					userBtcBalance = userBalance.get('btcBalance') as number;
-				}
-
-				const newBalance = userBtcBalance - amount;
-
-				await UserBalanceService.updateUserBtcBalance(email, newBalance);
-
-				await TransactionService.createTransaction({
-					amount,
-					fromUserPubkey: email,
-					toUserPubkey: 'user_withdraw',
-					fee: 0,
-					type: TxTypes.WITHDRAW,
-				});
-			},
-			(error: any) => {
-				console.log(error);
-				logger.error(error);
-			},
-		);
+		// init database
+		initDB.sync();
+		// init lnd and lud
+		lnd = await initLND();
+		lud = await initLUD();
+		// init event listener for lnd and lud
+		await onLNDDeposit(lnd);
+		await onLNDWithdrawal(lnd);
+		await onLUDFail(lud);
 	} catch (error) {
 		console.error(error);
 		logger.error(error);
 	}
 });
 
-export { lnd };
+export { lnd, lud };

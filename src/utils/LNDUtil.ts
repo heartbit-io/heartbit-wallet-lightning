@@ -20,9 +20,9 @@ import {
 	subscribeToPayments,
 } from 'lightning';
 import { EventEmitter } from 'stream';
-import logger from '../util/logger';
+import logger from './logger';
 
-class LightningService {
+class LNDUtil {
 	static connectionStatus = async (lnd: AuthenticatedLnd): Promise<boolean> => {
 		const walletInfo = await getWalletInfo({ lnd });
 		if (walletInfo.public_key) {
@@ -165,4 +165,4 @@ class LightningService {
 	};
 }
 
-export default LightningService;
+export default LNDUtil;
