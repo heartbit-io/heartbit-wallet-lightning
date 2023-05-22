@@ -39,7 +39,7 @@ class PaymentsController {
 					new ResponseDto(
 						false,
 						error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR,
-						error.message ? error.code : 'HTTP error',
+						error.message ? error.message : 'HTTP error',
 						null,
 					),
 				);
@@ -76,7 +76,7 @@ class PaymentsController {
 					new ResponseDto(
 						false,
 						error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR,
-						error.message ? error.code : 'HTTP error',
+						error.message ? error.message : 'HTTP error',
 						null,
 					),
 				);
@@ -104,7 +104,7 @@ class PaymentsController {
 					new ResponseDto(
 						false,
 						error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR,
-						error.message ? error.code : 'HTTP error',
+						error.message ? error.message : 'HTTP error',
 						null,
 					),
 				);
