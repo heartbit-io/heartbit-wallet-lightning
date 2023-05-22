@@ -1,4 +1,4 @@
-import { authenticatedLndGrpc, AuthenticatedLnd } from 'lightning';
+import { AuthenticatedLnd } from 'lightning';
 import { TxTypes } from '../enums/TxTypes';
 import logger from '../utils/logger';
 import { User } from '../domains/models/UserModel';
@@ -6,6 +6,8 @@ import { BtcTransaction } from '../domains/models/BtcTransactionModel';
 import { TxRequest } from '../domains/models/TxRequestModel';
 import { TxRequestStatus } from '../enums/TxRequestStatus';
 import LNDUtil from '../utils/LNDUtil';
+import { CustomError } from '../libs/CustomError';
+import { HttpCodes } from '../enums/HttpCodes';
 
 async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 	await LNDUtil.depositEventOn(lnd, async (event: any) => {
@@ -18,13 +20,16 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 			const amount = Number(received);
 
 			const email = description ? description : null;
+			if (!email)
+				throw new CustomError(
+					HttpCodes.BAD_REQUEST,
+					'Email not found in description',
+				);
 
-			if (!email) throw new Error('Email not found');
 			const user = await User.findOne({ where: { email: email } });
-			if (!user) throw new Error('User not found');
-			const currentBalance = user.get('btcBalance') as number;
+			if (!user) throw new CustomError(HttpCodes.NOT_FOUND, 'User not found');
 
-			await user.update({ btcBalance: currentBalance + amount });
+			await user.update({ btcBalance: user.get('btcBalance') + amount });
 
 			await BtcTransaction.create({
 				amount,
@@ -74,10 +79,9 @@ async function onLNDWithdrawal(lnd: AuthenticatedLnd): Promise<boolean> {
 				}
 
 				const user = await User.findOne({ where: { email: email } });
-				if (!user) throw new Error('User not found');
-				const currentBalance = user.get('btcBalance') as number;
+				if (!user) throw new CustomError(HttpCodes.NOT_FOUND, 'User not found');
 
-				await user.update({ btcBalance: currentBalance - amount });
+				await user.update({ btcBalance: user.get('btcBalance') - amount });
 
 				await BtcTransaction.create({
 					amount,
