@@ -21,21 +21,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// handle cors errors
-app.use((_req, res, next) => {
-	res.header('Access-Control-Allow-Origin', '*');
-	res.header(
-		'Access-Control-Allow-Headers',
-		'Origin, X-Requested-With, Content-Type, Accept, X-Access-Token',
-	);
-	next();
-});
-
 app.use('/api/v1', router);
-
-app.get('/', (req: Request, res: Response) => {
-	res.send('Typescript + Node.js + Express Server');
-});
 
 // UnKnown Routes
 app.all('*', (req: Request, res: Response) => {
