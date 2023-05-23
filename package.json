@@ -52,6 +52,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "and": "^0.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
@@ -64,7 +65,8 @@
     "pg-hstore": "^2.3.4",
     "reflect-metadata": "^0.1.13",
     "sequelize": "^6.31.0",
-    "swagger-ui-express": "^4.6.2",
+    "swagger-autogen": "^2.23.1",
+    "swagger-ui-express": "^4.6.3",
     "winston": "^3.8.2",
     "winston-daily-rotate-file": "^4.7.1"
   }
