@@ -21,7 +21,7 @@ router.get(
 
 router.get(
 	'/lnurl/withdrawals/',
-	Validator.validateInvoice,
+	Validator.validateInvoice(),
 	ValidationHandler.handleError,
 	PaymentsController.payInvoice,
 );
