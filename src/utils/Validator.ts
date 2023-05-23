@@ -5,14 +5,15 @@ class Validator {
 		return [
 			query('email')
 				.isString()
+				.trim() // trim should be in advance of notEmpty
 				.notEmpty()
 				.isEmail()
-				.rtrim()
 				.escape()
 				.withMessage('provide a valid email'),
 			query('amount')
 				.isNumeric()
 				.notEmpty()
+				.escape()
 				.withMessage(
 					'indicate invoice amount in satoshis, e.g. 1000 for 0.00001000 BTC',
 				),
@@ -23,7 +24,9 @@ class Validator {
 		return [
 			query('invoice')
 				.isString()
+				.trim()
 				.notEmpty()
+				.escape()
 				.withMessage('provide a valid invoice'),
 		];
 	}
