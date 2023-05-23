@@ -1,29 +1,12 @@
 import { Router } from 'express';
-import PaymentsController from '../controllers/PaymentsController';
-import ValidationHandler from '../utils/ValidationHandler';
-import Validator from '../utils/Validator';
+import { lndRoutes } from './lndRoutes';
+import { ludRoutes } from './ludRoutes';
+import { healthcheck } from './healthCheck';
 
 const router = Router();
 
-router.get(
-	'/lnd/deposits',
-	Validator.validateEmaliAndAmount(),
-	ValidationHandler.handleError,
-	PaymentsController.getPaymentRequest,
-);
-
-router.get(
-	'/lnd/withdrawals',
-	Validator.validateEmaliAndAmount(),
-	ValidationHandler.handleError,
-	PaymentsController.getWithdrawalRequest,
-);
-
-router.get(
-	'/lnurl/withdrawals',
-	Validator.validateInvoice,
-	ValidationHandler.handleError,
-	PaymentsController.payInvoice,
-);
+router.use('/lnd', lndRoutes);
+router.use('/lnurl', ludRoutes);
+router.use('/healthcheck', healthcheck);
 
 export default router;
