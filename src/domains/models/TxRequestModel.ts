@@ -45,7 +45,7 @@ TxRequest.init(
 	},
 	{
 		sequelize: initDB,
-		tableName: 'txRequests',
+		tableName: 'tx_requests',
 		timestamps: true,
 		paranoid: true,
 	},

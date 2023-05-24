@@ -64,7 +64,7 @@ BtcTransaction.init(
 	},
 	{
 		sequelize: initDB,
-		tableName: 'transactions',
+		tableName: 'btc_transactions',
 		timestamps: true,
 		paranoid: true,
 	},
