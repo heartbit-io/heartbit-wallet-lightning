@@ -4,9 +4,9 @@ import env from './env';
 
 const lud = lnurl.createServer({
 	host: 'localhost', // should be localhost as point out local server
-	// url: 'https://dev-wallet-lnd-api.heartbit.io', // url reached by external server
-	url: 'localhost:8080', // for local testing
-	port: env.LND_PORT,
+	url: 'https://dev-wallet-lnd-api.heartbit.io', // url reached by external server
+	// url: 'localhost:8080', // for local testing
+	port: env.SERVER_PORT,
 	listen: true,
 	endpoint: '/api/v1/lnurl/withdrawals',
 	auth: {
