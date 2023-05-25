@@ -67,5 +67,6 @@ BtcTransaction.init(
 		tableName: 'btc_transactions',
 		timestamps: true,
 		paranoid: true,
+		underscored: true,
 	},
 );

@@ -58,5 +58,6 @@ User.init(
 		tableName: 'users',
 		timestamps: true,
 		paranoid: true,
+		underscored: true,
 	},
 );

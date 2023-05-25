@@ -48,5 +48,6 @@ TxRequest.init(
 		tableName: 'tx_requests',
 		timestamps: true,
 		paranoid: true,
+		underscored: true,
 	},
 );
