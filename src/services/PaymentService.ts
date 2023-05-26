@@ -1,8 +1,7 @@
 import LNDUtil from '../utils/LNDUtil';
 import { HttpCodes } from '../enums/HttpCodes';
 import { User } from '../domains/models/UserModel';
-import { lnd } from '..';
-import lud from '../config/initLUD';
+import { lnd, lud } from '..';
 import logger from '../utils/logger';
 import { TxRequest } from '../domains/models/TxRequestModel';
 import { CustomError } from '../libs/CustomError';
@@ -61,6 +60,7 @@ class PaymentsService {
 				userId: user.get('id') as number,
 				secret: withdrawRequest.secret,
 			});
+
 			return withdrawRequest.encoded;
 		} catch (error: any) {
 			logger.error(error);
