@@ -7,9 +7,9 @@ import logger from './utils/logger';
 import { HttpCodes } from './enums/HttpCodes';
 import initLND from './config/initLND';
 import { AuthenticatedLnd } from 'lightning';
+import initLUD from './config/initLUD';
 import { onLNDDeposit, onLNDWithdrawal } from './events/LNDEvent';
 import { onLUDFail } from './events/LUDEvent';
-import lud from './config/initLUD';
 import initDB from './domains/initDB';
 import ResponseDto from './dto/ResponseDto';
 
@@ -33,6 +33,7 @@ app.all('*', (req: Request, res: Response) => {
 });
 
 let lnd: AuthenticatedLnd;
+let lud: any;
 
 app.listen(port, async () => {
 	try {
@@ -40,6 +41,7 @@ app.listen(port, async () => {
 		initDB.sync();
 		// init lnd and lud
 		lnd = await initLND();
+		lud = await initLUD();
 		// init event listener for lnd and lud
 		await onLNDDeposit(lnd);
 		await onLNDWithdrawal(lnd);
@@ -50,4 +52,4 @@ app.listen(port, async () => {
 	}
 });
 
-export { lnd };
+export { lnd, lud };
