@@ -5,7 +5,7 @@ import { TxRequestStatus } from '../enums/TxRequestStatus';
 import LNDUtil from '../utils/LNDUtil';
 import { CustomError } from '../libs/CustomError';
 import { HttpCodes } from '../enums/HttpCodes';
-import {
+import dataSource, {
 	userRepository,
 	btcTransactionRepository,
 	txRequestRepository,
@@ -13,6 +13,10 @@ import {
 
 async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 	await LNDUtil.depositEventOn(lnd, async (event: any) => {
+		const queryRunner = dataSource.createQueryRunner();
+		await queryRunner.connect();
+		await queryRunner.startTransaction('SERIALIZABLE');
+
 		try {
 			const { description, is_confirmed, received } = event;
 			logger.info({ ...event });
@@ -42,9 +46,11 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 				fromUserPubkey: 'user_deposit',
 				toUserPubkey: email,
 			});
-		} catch (err) {
-			console.log(err);
-			logger.error(err);
+		} catch (error: any) {
+			logger.error(error);
+			await queryRunner.rollbackTransaction();
+		} finally {
+			await queryRunner.release();
 		}
 	});
 
@@ -55,6 +61,10 @@ async function onLNDWithdrawal(lnd: AuthenticatedLnd): Promise<boolean> {
 	await LNDUtil.withdrawalEventOn(
 		lnd,
 		async (event: any) => {
+			const queryRunner = dataSource.createQueryRunner();
+			await queryRunner.connect();
+			await queryRunner.startTransaction('SERIALIZABLE');
+
 			try {
 				const { confirmed_at, tokens, description, secret } = event;
 				// secret
@@ -95,9 +105,11 @@ async function onLNDWithdrawal(lnd: AuthenticatedLnd): Promise<boolean> {
 					fee: 0,
 					type: TxTypes.WITHDRAW,
 				});
-			} catch (err) {
-				console.log(err);
-				logger.error(err);
+			} catch (error: any) {
+				logger.error(error);
+				await queryRunner.rollbackTransaction();
+			} finally {
+				await queryRunner.release();
 			}
 		},
 		(err: any) => {
