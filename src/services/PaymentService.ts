@@ -1,7 +1,6 @@
 import LNDUtil from '../utils/LNDUtil';
 import { HttpCodes } from '../enums/HttpCodes';
-import { lnd } from '..';
-import lud from '../config/initLUD';
+import { lnd, lud } from '..';
 import logger from '../utils/logger';
 import { CustomError } from '../libs/CustomError';
 import { PayResult } from 'lightning';
@@ -58,6 +57,7 @@ class PaymentsService {
 				userId: user.id as number,
 				secret: withdrawRequest.secret,
 			});
+
 			return withdrawRequest.encoded;
 		} catch (error: any) {
 			logger.error(error);

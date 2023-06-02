@@ -1,9 +1,12 @@
+import * as Sentry from '@sentry/node';
+
 import { Request, Response } from 'express';
-import ResponseDto from '../dto/ResponseDto';
+
 import { HttpCodes } from '../enums/HttpCodes';
-import logger from '../utils/logger';
-import PaymentService from '../services/PaymentService';
 import { PayResult } from 'lightning';
+import PaymentService from '../services/PaymentService';
+import ResponseDto from '../dto/ResponseDto';
+import logger from '../utils/logger';
 
 class PaymentsController {
 	async getPaymentRequest(
@@ -33,6 +36,9 @@ class PaymentsController {
 				);
 		} catch (error: any) {
 			logger.error(error);
+			Sentry.captureMessage(
+				`[${HttpCodes.INTERNAL_SERVER_ERROR}] ${error.message}`,
+			);
 			return response
 				.status(error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR)
 				.json(
@@ -70,6 +76,9 @@ class PaymentsController {
 				);
 		} catch (error: any) {
 			logger.error(error);
+			Sentry.captureMessage(
+				`[${HttpCodes.INTERNAL_SERVER_ERROR}] ${error.message}`,
+			);
 			return response
 				.status(error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR)
 				.json(
@@ -98,6 +107,9 @@ class PaymentsController {
 				);
 		} catch (error: any) {
 			logger.error(error);
+			Sentry.captureMessage(
+				`[${HttpCodes.INTERNAL_SERVER_ERROR}] ${error.message}`,
+			);
 			return response
 				.status(error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR)
 				.json(

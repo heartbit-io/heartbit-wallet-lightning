@@ -7,6 +7,7 @@ const env = {
 	LND_TLS: process.env.LND_TLS as string,
 	LND_HOST: process.env.LND_HOST as string,
 	LND_PORT: process.env.LND_PORT as string,
+	LUD_PORT: process.env.LUD_PORT as string,
 	SERVER_PORT: process.env.SERVER_PORT as string,
 	BASE_SERVER_URL: process.env.BASE_SERVER_URL as string,
 	DB_NAME: process.env.DB_NAME as string,
@@ -18,6 +19,7 @@ const env = {
 	TEST_DB_NAME: process.env.TEST_DB_NAME as string,
 	LND_TLS_PATH: process.env.LND_TLS_PATH as string,
 	LND_MACAROON_PATH: process.env.LND_MACAROON_PATH as string,
+	SENTRY_DSN: process.env.SENTRY_DSN as string,
 };
 
 Object.entries(env).forEach(([key, value]) => {
