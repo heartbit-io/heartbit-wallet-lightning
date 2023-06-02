@@ -3,7 +3,6 @@ import * as Sentry from '@sentry/node';
 import { Request, Response } from 'express';
 
 import { HttpCodes } from '../enums/HttpCodes';
-import { PayResult } from 'lightning';
 import PaymentService from '../services/PaymentService';
 import ResponseDto from '../dto/ResponseDto';
 import logger from '../utils/logger';
@@ -101,10 +100,7 @@ class PaymentsController {
 		const secret = k1;
 		const invoice = pr;
 		try {
-			const payment: PayResult = await PaymentService.payInvoice(
-				secret,
-				invoice,
-			);
+			await PaymentService.payInvoice(secret, invoice);
 			return response
 				.status(HttpCodes.OK)
 				.json(
