@@ -10,8 +10,8 @@ import { AuthenticatedLnd } from 'lightning';
 import { onLNDDeposit, onLNDWithdrawal } from './events/LNDEvent';
 import { onLUDFail } from './events/LUDEvent';
 import lud from './config/initLUD';
-import initDB from './domains/initDB';
 import ResponseDto from './dto/ResponseDto';
+import dataSource from './domains/repo';
 
 const app: Express = express();
 const port = Number(env.SERVER_PORT);
@@ -37,7 +37,7 @@ let lnd: AuthenticatedLnd;
 app.listen(port, async () => {
 	try {
 		// init database
-		initDB.sync();
+		await dataSource.initialize();
 		// init lnd and lud
 		lnd = await initLND();
 		// init event listener for lnd and lud
