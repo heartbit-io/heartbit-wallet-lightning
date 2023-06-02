@@ -15,7 +15,7 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 	await LNDUtil.depositEventOn(lnd, async (event: any) => {
 		const queryRunner = dataSource.createQueryRunner();
 		await queryRunner.connect();
-		await queryRunner.startTransaction('SERIALIZABLE');
+		await queryRunner.startTransaction('REPEATABLE READ');
 
 		try {
 			const { description, is_confirmed, received } = event;
@@ -63,7 +63,7 @@ async function onLNDWithdrawal(lnd: AuthenticatedLnd): Promise<boolean> {
 		async (event: any) => {
 			const queryRunner = dataSource.createQueryRunner();
 			await queryRunner.connect();
-			await queryRunner.startTransaction('SERIALIZABLE');
+			await queryRunner.startTransaction('REPEATABLE READ');
 
 			try {
 				const { confirmed_at, tokens, description, secret } = event;
