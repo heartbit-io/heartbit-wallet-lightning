@@ -1,11 +1,10 @@
 import LNDUtil from '../utils/LNDUtil';
 import { HttpCodes } from '../enums/HttpCodes';
-import { User } from '../domains/models/UserModel';
 import { lnd, lud } from '..';
 import logger from '../utils/logger';
-import { TxRequest } from '../domains/models/TxRequestModel';
 import { CustomError } from '../libs/CustomError';
 import { PayResult } from 'lightning';
+import { userRepository, txRequestRepository } from '../domains/repo';
 
 class PaymentsService {
 	async getPaymentRequest(email: string, amount: number): Promise<string> {
@@ -30,13 +29,11 @@ class PaymentsService {
 	async getWithdrawalRequest(email: string, amount: number): Promise<string> {
 		try {
 			//check that user has enough balance
-			const user = await User.findOne({ where: { email: email } });
+			const user = await userRepository.findOneBy({ email: email });
 
 			if (!user) throw new CustomError(HttpCodes.NOT_FOUND, 'User not found');
 
-			const userBalance = user.get('btcBalance') as number;
-
-			if (userBalance < Number(amount))
+			if (user.btcBalance < Number(amount))
 				throw new CustomError(
 					HttpCodes.UNPROCESSED_CONTENT,
 					'Insufficient balance',
@@ -55,9 +52,9 @@ class PaymentsService {
 
 			const withdrawRequest = await lud.generateNewUrl(tag, params, options);
 
-			await TxRequest.create({
+			await txRequestRepository.save({
 				amount: Number(amount),
-				userId: user.get('id') as number,
+				userId: user.id as number,
 				secret: withdrawRequest.secret,
 			});
 
