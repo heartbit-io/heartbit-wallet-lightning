@@ -1,14 +1,12 @@
 import { AuthenticatedLnd } from 'lightning';
 import { TxTypes } from '../enums/TxTypes';
 import logger from '../utils/logger';
-import { TxRequestStatus } from '../enums/TxRequestStatus';
 import LNDUtil from '../utils/LNDUtil';
 import { CustomError } from '../libs/CustomError';
 import { HttpCodes } from '../enums/HttpCodes';
 import dataSource, {
 	userRepository,
 	btcTransactionRepository,
-	txRequestRepository,
 } from '../domains/repo';
 
 async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
@@ -61,55 +59,10 @@ async function onLNDWithdrawal(lnd: AuthenticatedLnd): Promise<boolean> {
 	await LNDUtil.withdrawalEventOn(
 		lnd,
 		async (event: any) => {
-			const queryRunner = dataSource.createQueryRunner();
-			await queryRunner.connect();
-			await queryRunner.startTransaction('REPEATABLE READ');
-
 			try {
-				const { confirmed_at, tokens, description, secret } = event;
-				// secret
 				console.log(event);
-				if (!confirmed_at) return;
-
-				const amount = Number(tokens) / 1000;
-
-				let email = description ? description : null;
-
-				if (!email) {
-					const userWithWithdrawRequest = await txRequestRepository.findOneBy({
-						secret,
-						status: TxRequestStatus.CREATED,
-					});
-
-					if (userWithWithdrawRequest) {
-						const userId = userWithWithdrawRequest.userId;
-						const user = await userRepository.findOneBy({ id: userId });
-
-						if (user) {
-							email = user.email;
-						}
-					}
-				}
-
-				const user = await userRepository.findOneBy({ email: email });
-				if (!user) throw new CustomError(HttpCodes.NOT_FOUND, 'User not found');
-
-				await userRepository.update(user.id, {
-					btcBalance: user.btcBalance - amount,
-				});
-
-				await btcTransactionRepository.save({
-					amount,
-					fromUserPubkey: email,
-					toUserPubkey: 'user_withdraw',
-					fee: 0,
-					type: TxTypes.WITHDRAW,
-				});
 			} catch (error: any) {
 				logger.error(error);
-				await queryRunner.rollbackTransaction();
-			} finally {
-				await queryRunner.release();
 			}
 		},
 		(err: any) => {
