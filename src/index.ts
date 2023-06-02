@@ -9,12 +9,10 @@ import ResponseDto from './dto/ResponseDto';
 import cors from 'cors';
 import env from './config/env';
 import helmet from 'helmet';
-import initDB from './domains/initDB';
 import initLND from './config/initLND';
 import initLUD from './config/initLUD';
 import logger from './utils/logger';
 import { onLUDFail } from './events/LUDEvent';
-import ResponseDto from './dto/ResponseDto';
 import dataSource from './domains/repo';
 import router from './routes';
 
