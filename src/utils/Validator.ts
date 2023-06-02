@@ -20,9 +20,15 @@ class Validator {
 		];
 	}
 
-	static validateInvoice() {
+	static validateSecretAndInvoice() {
 		return [
-			query('invoice')
+			query('k1')
+				.isString()
+				.trim()
+				.notEmpty()
+				.escape()
+				.withMessage('provide a valid k1 value'),
+			query('pr')
 				.isString()
 				.trim()
 				.notEmpty()

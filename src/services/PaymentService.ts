@@ -70,8 +70,9 @@ class PaymentsService {
 		}
 	}
 
-	async payInvoice(invoice: string): Promise<PayResult> {
+	async payInvoice(secret: string, invoice: string): Promise<PayResult> {
 		try {
+			secret = secret as string;
 			invoice = invoice as string;
 			const payment = await LNDUtil.makePayment(lnd, invoice);
 			if (!payment.is_confirmed)
