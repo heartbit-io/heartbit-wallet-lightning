@@ -7,7 +7,7 @@ const router = Router();
 
 router.get(
 	'/withdrawals',
-	Validator.validateInvoice(),
+	Validator.validateSecretAndInvoice(),
 	ValidationHandler.handleError,
 	PaymentsController.payInvoice,
 );

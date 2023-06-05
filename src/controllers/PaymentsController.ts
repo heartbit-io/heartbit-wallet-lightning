@@ -3,7 +3,6 @@ import * as Sentry from '@sentry/node';
 import { Request, Response } from 'express';
 
 import { HttpCodes } from '../enums/HttpCodes';
-import { PayResult } from 'lightning';
 import PaymentService from '../services/PaymentService';
 import ResponseDto from '../dto/ResponseDto';
 import logger from '../utils/logger';
@@ -94,16 +93,23 @@ class PaymentsController {
 
 	async payInvoice(
 		request: Request,
-		response: Response<ResponseDto<PayResult | null>>,
-	): Promise<Response<ResponseDto<PayResult>>> {
+		response: Response<ResponseDto<string | null>>,
+	): Promise<Response<ResponseDto<string>>> {
 		// type request first
-		const { invoice } = request.query as unknown as { invoice: string };
+		const { k1, pr } = request.query as unknown as { k1: string; pr: string };
+		const secret = k1;
+		const invoice = pr;
 		try {
-			const payment: PayResult = await PaymentService.payInvoice(invoice);
+			await PaymentService.payInvoice(secret, invoice);
 			return response
 				.status(HttpCodes.OK)
 				.json(
-					new ResponseDto(true, HttpCodes.OK, 'Payment successful', payment),
+					new ResponseDto(
+						true,
+						HttpCodes.OK,
+						'Payment successful',
+						'HeartBit withdrawal successful',
+					),
 				);
 		} catch (error: any) {
 			logger.error(error);
