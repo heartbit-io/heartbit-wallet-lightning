@@ -6,6 +6,7 @@ import { HttpCodes } from '../enums/HttpCodes';
 import PaymentService from '../services/PaymentService';
 import ResponseDto from '../dto/ResponseDto';
 import logger from '../utils/logger';
+import WithdrawalInfoDto from '../dto/WithdrawalInfoDto';
 
 class PaymentsController {
 	async getPaymentRequest(
@@ -91,26 +92,17 @@ class PaymentsController {
 		}
 	}
 
-	async payInvoice(
+	async getWithdrawalInfo(
 		request: Request,
-		response: Response<ResponseDto<string | null>>,
-	): Promise<Response<ResponseDto<string>>> {
+		response: Response<WithdrawalInfoDto | string>,
+	): Promise<Response<WithdrawalInfoDto | string>> {
 		// type request first
-		const { k1, pr } = request.query as unknown as { k1: string; pr: string };
-		const secret = k1;
-		const invoice = pr;
+		const { q } = request.query as unknown as { q: string };
+		const secret = q;
 		try {
-			await PaymentService.payInvoice(secret, invoice);
-			return response
-				.status(HttpCodes.OK)
-				.json(
-					new ResponseDto(
-						true,
-						HttpCodes.OK,
-						'Payment successful',
-						'HeartBit withdrawal successful',
-					),
-				);
+			const withdrawalInfo: WithdrawalInfoDto =
+				await PaymentService.getWithdrawalInfo(secret);
+			return response.status(HttpCodes.OK).json(withdrawalInfo);
 		} catch (error: any) {
 			logger.error(error);
 			Sentry.captureMessage(
@@ -118,14 +110,31 @@ class PaymentsController {
 			);
 			return response
 				.status(error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR)
-				.json(
-					new ResponseDto(
-						false,
-						error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR,
-						error.message ? error.message : 'HTTP error',
-						null,
-					),
-				);
+				.json(error.message ? error.message : 'HTTP error');
+		}
+	}
+
+	async payWithdrawalInvoice(
+		request: Request,
+		response: Response<string>,
+	): Promise<Response<string>> {
+		// type request first
+		const { k1, pr } = request.query as unknown as { k1: string; pr: string };
+		const secret = k1;
+		const invoice = pr;
+		try {
+			await PaymentService.payWithdrawalInvoice(secret, invoice);
+			return response
+				.status(HttpCodes.OK)
+				.json('HeartBit withdrawal successful');
+		} catch (error: any) {
+			logger.error(error);
+			Sentry.captureMessage(
+				`[${HttpCodes.INTERNAL_SERVER_ERROR}] ${error.message}`,
+			);
+			return response
+				.status(error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR)
+				.json(error.message ? error.message : 'HTTP error');
 		}
 	}
 }
