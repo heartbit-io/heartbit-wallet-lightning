@@ -20,6 +20,17 @@ class Validator {
 		];
 	}
 
+	static validateSecret() {
+		return [
+			query('q')
+				.isString()
+				.trim()
+				.notEmpty()
+				.escape()
+				.withMessage('provide a valid q value'),
+		];
+	}
+
 	static validateSecretAndInvoice() {
 		return [
 			query('k1')
