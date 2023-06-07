@@ -8,7 +8,7 @@ import {
 import { TxTypes } from '../../enums/TxTypes';
 import { User } from './User';
 
-@Entity()
+@Entity('btc_transactions')
 export class BtcTransaction {
 	@PrimaryGeneratedColumn()
 	id: number;
