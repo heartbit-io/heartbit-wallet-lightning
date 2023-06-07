@@ -7,9 +7,16 @@ const router = Router();
 
 router.get(
 	'/withdrawals',
+	Validator.validateSecret(),
+	ValidationHandler.handleError,
+	PaymentsController.getWithdrawalInfo,
+);
+
+router.get(
+	'/withdrawals/payments',
 	Validator.validateSecretAndInvoice(),
 	ValidationHandler.handleError,
-	PaymentsController.payInvoice,
+	PaymentsController.payWithdrawalInvoice,
 );
 
 export { router as ludRoutes };
