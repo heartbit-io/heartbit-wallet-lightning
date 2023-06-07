@@ -10,6 +10,7 @@ import dataSource, {
 } from '../domains/repo';
 import NodeCache from 'node-cache';
 import { TxTypes } from '../enums/TxTypes';
+import WithdrawalInfoDto from '../dto/WithdrawalInfoDto';
 
 const nodeCache = new NodeCache({
 	stdTTL: 60 * 60 * 24 * 3,
@@ -52,9 +53,9 @@ class PaymentsService {
 			const tag = 'withdrawRequest';
 			const amountInmsat = Number(amount) * 1000;
 			const params = {
+				defaultDescription: email,
 				minWithdrawable: 1000,
 				maxWithdrawable: amountInmsat,
-				defaultDescription: email,
 			};
 			const options = {
 				uses: 1,
@@ -62,7 +63,19 @@ class PaymentsService {
 
 			const withdrawRequest = await lud.generateNewUrl(tag, params, options);
 
-			if (!nodeCache.set(withdrawRequest.secret, user.email))
+			if (
+				!nodeCache.set(
+					withdrawRequest.secret,
+					new WithdrawalInfoDto(
+						tag,
+						'https://dev-wallet-lnd-api.heartbit.io/lnurl/withdrawals/payments',
+						withdrawRequest.secret,
+						params.defaultDescription,
+						params.minWithdrawable,
+						params.maxWithdrawable,
+					),
+				)
+			)
 				throw new CustomError(
 					HttpCodes.INTERNAL_SERVER_ERROR,
 					'Cache unavailable',
@@ -80,7 +93,25 @@ class PaymentsService {
 		}
 	}
 
-	async payInvoice(secret: string, invoice: string): Promise<void> {
+	async getWithdrawalInfo(secret: string): Promise<WithdrawalInfoDto> {
+		try {
+			const withdrawalInfo: WithdrawalInfoDto | undefined =
+				nodeCache.get(secret);
+			if (withdrawalInfo === undefined)
+				throw new CustomError(HttpCodes.BAD_REQUEST, 'Invalid q value');
+			return withdrawalInfo;
+		} catch (error: any) {
+			logger.error(error);
+			throw error.code && error.message
+				? error
+				: new CustomError(
+						HttpCodes.INTERNAL_SERVER_ERROR,
+						'Internal Server Error',
+				  );
+		}
+	}
+
+	async payWithdrawalInvoice(secret: string, invoice: string): Promise<void> {
 		const queryRunner = dataSource.createQueryRunner();
 		await queryRunner.connect();
 		await queryRunner.startTransaction('REPEATABLE READ');
@@ -89,11 +120,14 @@ class PaymentsService {
 			secret = secret as string;
 			invoice = invoice as string;
 
-			const email = nodeCache.get(secret);
-			if (email === undefined)
+			const withdrawalInfo: WithdrawalInfoDto | undefined =
+				nodeCache.get(secret);
+			if (withdrawalInfo === undefined)
 				throw new CustomError(HttpCodes.BAD_REQUEST, 'Invalid k1 value');
 
-			const user = await userRepository.findOneBy({ email: email as string });
+			const user = await userRepository.findOneBy({
+				email: withdrawalInfo.defaultDescription as string,
+			});
 			if (!user) throw new CustomError(HttpCodes.NOT_FOUND, 'User not found');
 
 			const payment: PayResult = await LNDUtil.makePayment(lnd, invoice);
@@ -106,7 +140,7 @@ class PaymentsService {
 
 			await btcTransactionRepository.save({
 				amount: payment.tokens,
-				fromUserPubkey: email as string,
+				fromUserPubkey: withdrawalInfo.defaultDescription as string,
 				toUserPubkey: 'user_withdraw',
 				fee: 0,
 				type: TxTypes.WITHDRAW,
