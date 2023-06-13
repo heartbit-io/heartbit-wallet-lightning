@@ -47,6 +47,13 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 		} catch (error: any) {
 			logger.error(error);
 			await queryRunner.rollbackTransaction();
+
+			throw error.code && error.message
+				? error
+				: new CustomError(
+						HttpCodes.INTERNAL_SERVER_ERROR,
+						'Internal Server Error',
+				  );
 		} finally {
 			await queryRunner.release();
 		}
