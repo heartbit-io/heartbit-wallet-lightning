@@ -75,7 +75,7 @@ app.listen(port, async () => {
 		lud = await initLUD();
 		// init event listener for lnd and lud
 		await onLNDDeposit(lnd);
-		await onLNDWithdrawal(lnd);
+		// await onLNDWithdrawal(lnd);
 		await onLUDFail(lud);
 	} catch (error) {
 		console.error(error);
