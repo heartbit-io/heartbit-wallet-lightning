@@ -6,6 +6,7 @@ import { CustomError } from '../libs/CustomError';
 import { HttpCodes } from '../enums/HttpCodes';
 import dataSource from '../domains/repo';
 import { User } from '../domains/entities/User';
+import { BtcTransaction } from '../domains/entities/BtcTransaction';
 
 async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 	await LNDUtil.depositEventOn(lnd, async (event: any) => {
@@ -35,7 +36,7 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 				btcBalance: user.btcBalance + amount,
 			});
 
-			await queryRunner.manager.save({
+			await queryRunner.manager.save(BtcTransaction, {
 				amount: amount,
 				fee: 0,
 				type: TxTypes.DEPOSIT,
