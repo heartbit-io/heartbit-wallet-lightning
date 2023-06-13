@@ -16,8 +16,7 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 
 		try {
 			const { description, is_confirmed, received } = event;
-			logger.info({ ...event });
-			console.log({ ...event });
+
 			if (!is_confirmed) return;
 
 			const amount = Number(received);
