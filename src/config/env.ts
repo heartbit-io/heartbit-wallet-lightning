@@ -20,6 +20,7 @@ const env = {
 	LND_TLS_PATH: process.env.LND_TLS_PATH as string,
 	LND_MACAROON_PATH: process.env.LND_MACAROON_PATH as string,
 	SENTRY_DSN: process.env.SENTRY_DSN as string,
+	BASE_SERVER_DOMAIN: process.env.BASE_SERVER_DOMAIN as string,
 };
 
 Object.entries(env).forEach(([key, value]) => {
