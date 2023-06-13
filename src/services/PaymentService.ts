@@ -3,14 +3,14 @@ import { HttpCodes } from '../enums/HttpCodes';
 import { lnd, lud } from '..';
 import logger from '../utils/logger';
 import { CustomError } from '../libs/CustomError';
-import { pay, PayResult } from 'lightning';
-import dataSource, {
-	userRepository,
-	btcTransactionRepository,
-} from '../domains/repo';
+import { PayResult } from 'lightning';
+import dataSource, { userRepository } from '../domains/repo';
 import NodeCache from 'node-cache';
 import { TxTypes } from '../enums/TxTypes';
 import WithdrawalInfoDto from '../dto/WithdrawalInfoDto';
+import { User } from '../domains/entities/User';
+import { BtcTransaction } from '../domains/entities/BtcTransaction';
+import env from '../config/env';
 
 const nodeCache = new NodeCache({
 	stdTTL: 60 * 60 * 24 * 3,
@@ -68,7 +68,7 @@ class PaymentsService {
 					withdrawRequest.secret,
 					new WithdrawalInfoDto(
 						tag,
-						'https://dev-wallet-lnd-api.heartbit.io/lnurl/withdrawals/payments',
+						env.BASE_SERVER_DOMAIN + 'lnurl/withdrawals/payments',
 						withdrawRequest.secret,
 						params.defaultDescription,
 						params.minWithdrawable,
@@ -125,7 +125,7 @@ class PaymentsService {
 			if (withdrawalInfo === undefined)
 				throw new CustomError(HttpCodes.BAD_REQUEST, 'Invalid k1 value');
 
-			const user = await userRepository.findOneBy({
+			const user = await queryRunner.manager.findOneBy(User, {
 				email: withdrawalInfo.defaultDescription as string,
 			});
 			if (!user) throw new CustomError(HttpCodes.NOT_FOUND, 'User not found');
@@ -134,18 +134,19 @@ class PaymentsService {
 			if (!payment.is_confirmed)
 				throw new CustomError(HttpCodes.UNPROCESSED_CONTENT, 'Payment failed');
 
-			await userRepository.update(user.id, {
+			await queryRunner.manager.update(User, user.id, {
 				btcBalance: user.btcBalance - payment.tokens,
 			});
 
-			await btcTransactionRepository.save({
+			await queryRunner.manager.save(BtcTransaction, {
 				amount: payment.tokens,
 				fromUserPubkey: withdrawalInfo.defaultDescription as string,
 				toUserPubkey: 'user_withdraw',
-				fee: 0,
+				fee: Math.ceil(payment.tokens * 0.01),
 				type: TxTypes.WITHDRAW,
 			});
 
+			await queryRunner.commitTransaction();
 			nodeCache.del(secret);
 		} catch (error: any) {
 			logger.error(error);
