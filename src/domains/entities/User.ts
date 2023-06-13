@@ -1,4 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+	Entity,
+	Column,
+	PrimaryGeneratedColumn,
+	CreateDateColumn,
+	UpdateDateColumn,
+	DeleteDateColumn,
+} from 'typeorm';
 import { UserRoles } from '../../enums/UserRoles';
 
 @Entity('users')
@@ -21,6 +28,16 @@ export class User {
 
 	@Column()
 	btcBalance: number;
+
+	@CreateDateColumn()
+	createdAt: Date;
+
+	@UpdateDateColumn()
+	updatedAt: Date;
+
+	//soft delete
+	@DeleteDateColumn()
+	deletedAt: Date | null;
 }
 
 export interface UserFields {

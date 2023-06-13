@@ -4,6 +4,9 @@ import {
 	PrimaryGeneratedColumn,
 	ManyToOne,
 	JoinColumn,
+	CreateDateColumn,
+	UpdateDateColumn,
+	DeleteDateColumn,
 } from 'typeorm';
 import { TxTypes } from '../../enums/TxTypes';
 import { User } from './User';
@@ -48,6 +51,16 @@ export class BtcTransaction {
 		referencedColumnName: 'pubkey',
 	})
 	ToUser: User;
+
+	@CreateDateColumn()
+	createdAt: Date;
+
+	@UpdateDateColumn()
+	updatedAt: Date;
+
+	//soft delete
+	@DeleteDateColumn()
+	deletedAt: Date | null;
 }
 
 export interface BtcTransactionFields {
