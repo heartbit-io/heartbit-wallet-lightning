@@ -140,16 +140,16 @@ class PaymentsService {
 			if (!payment.is_confirmed)
 				throw new CustomError(HttpCodes.UNPROCESSED_CONTENT, 'Payment failed');
 
-			await queryRunner.manager.update(User, user.id, {
-				btcBalance: () => `btc_balance - ${payment.tokens}`,
-			});
-
 			await queryRunner.manager.insert(BtcTransaction, {
 				amount: payment.tokens,
 				fromUserPubkey: withdrawalInfo.defaultDescription as string,
 				toUserPubkey: 'user_withdraw',
 				fee: Math.ceil(payment.tokens * 0.01),
 				type: TxTypes.WITHDRAW,
+			});
+
+			await queryRunner.manager.update(User, user.id, {
+				btcBalance: () => `btc_balance - ${payment.tokens}`,
 			});
 
 			await queryRunner.commitTransaction();
