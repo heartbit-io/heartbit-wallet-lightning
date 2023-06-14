@@ -28,7 +28,13 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 					'Email not found in description',
 				);
 
-			const user = await queryRunner.manager.findOneBy(User, { email: email });
+			const user = await queryRunner.manager
+				.getRepository(User)
+				.createQueryBuilder('user')
+				.useTransaction(true)
+				.setLock('pessimistic_write')
+				.where('user.email = :email', { email: email })
+				.getOne();
 			if (!user) throw new CustomError(HttpCodes.NOT_FOUND, 'User not found');
 
 			await queryRunner.manager.update(User, user.id, {
