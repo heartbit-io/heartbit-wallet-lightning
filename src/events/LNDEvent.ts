@@ -4,10 +4,9 @@ import logger from '../utils/logger';
 import LNDUtil from '../utils/LNDUtil';
 import { CustomError } from '../libs/CustomError';
 import { HttpCodes } from '../enums/HttpCodes';
-import dataSource, {
-	userRepository,
-	btcTransactionRepository,
-} from '../domains/repo';
+import dataSource from '../domains/repo';
+import { User } from '../domains/entities/User';
+import { BtcTransaction } from '../domains/entities/BtcTransaction';
 
 async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 	await LNDUtil.depositEventOn(lnd, async (event: any) => {
@@ -17,8 +16,7 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 
 		try {
 			const { description, is_confirmed, received } = event;
-			logger.info({ ...event });
-			console.log({ ...event });
+
 			if (!is_confirmed) return;
 
 			const amount = Number(received);
@@ -30,20 +28,22 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 					'Email not found in description',
 				);
 
-			const user = await userRepository.findOneBy({ email: email });
+			const user = await queryRunner.manager.findOneBy(User, { email: email });
 			if (!user) throw new CustomError(HttpCodes.NOT_FOUND, 'User not found');
 
-			await userRepository.update(user.id, {
+			await queryRunner.manager.update(User, user.id, {
 				btcBalance: user.btcBalance + amount,
 			});
 
-			await btcTransactionRepository.save({
+			await queryRunner.manager.save(BtcTransaction, {
 				amount: amount,
 				fee: 0,
 				type: TxTypes.DEPOSIT,
 				fromUserPubkey: 'user_deposit',
 				toUserPubkey: email,
 			});
+
+			await queryRunner.commitTransaction();
 		} catch (error: any) {
 			logger.error(error);
 			await queryRunner.rollbackTransaction();
