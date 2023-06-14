@@ -32,10 +32,10 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 			if (!user) throw new CustomError(HttpCodes.NOT_FOUND, 'User not found');
 
 			await queryRunner.manager.update(User, user.id, {
-				btcBalance: user.btcBalance + amount,
+				btcBalance: () => `btc_balance + ${amount}`,
 			});
 
-			await queryRunner.manager.save(BtcTransaction, {
+			await queryRunner.manager.insert(BtcTransaction, {
 				amount: amount,
 				fee: 0,
 				type: TxTypes.DEPOSIT,
