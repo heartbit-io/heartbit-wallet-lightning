@@ -125,25 +125,31 @@ class PaymentsService {
 			if (withdrawalInfo === undefined)
 				throw new CustomError(HttpCodes.BAD_REQUEST, 'Invalid k1 value');
 
-			const user = await queryRunner.manager.findOneBy(User, {
-				email: withdrawalInfo.defaultDescription as string,
-			});
+			const user = await queryRunner.manager
+				.getRepository(User)
+				.createQueryBuilder('user')
+				.useTransaction(true)
+				.setLock('pessimistic_write')
+				.where('user.email = :email', {
+					email: withdrawalInfo.defaultDescription as string,
+				})
+				.getOne();
 			if (!user) throw new CustomError(HttpCodes.NOT_FOUND, 'User not found');
 
 			const payment: PayResult = await LNDUtil.makePayment(lnd, invoice);
 			if (!payment.is_confirmed)
 				throw new CustomError(HttpCodes.UNPROCESSED_CONTENT, 'Payment failed');
 
-			await queryRunner.manager.update(User, user.id, {
-				btcBalance: user.btcBalance - payment.tokens,
-			});
-
-			await queryRunner.manager.save(BtcTransaction, {
+			await queryRunner.manager.insert(BtcTransaction, {
 				amount: payment.tokens,
 				fromUserPubkey: withdrawalInfo.defaultDescription as string,
 				toUserPubkey: 'user_withdraw',
 				fee: Math.ceil(payment.tokens * 0.01),
 				type: TxTypes.WITHDRAW,
+			});
+
+			await queryRunner.manager.update(User, user.id, {
+				btcBalance: () => `btc_balance - ${payment.tokens}`,
 			});
 
 			await queryRunner.commitTransaction();

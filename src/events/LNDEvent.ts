@@ -28,19 +28,25 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 					'Email not found in description',
 				);
 
-			const user = await queryRunner.manager.findOneBy(User, { email: email });
+			const user = await queryRunner.manager
+				.getRepository(User)
+				.createQueryBuilder('user')
+				.useTransaction(true)
+				.setLock('pessimistic_write')
+				.where('user.email = :email', { email: email })
+				.getOne();
 			if (!user) throw new CustomError(HttpCodes.NOT_FOUND, 'User not found');
 
-			await queryRunner.manager.update(User, user.id, {
-				btcBalance: user.btcBalance + amount,
-			});
-
-			await queryRunner.manager.save(BtcTransaction, {
+			await queryRunner.manager.insert(BtcTransaction, {
 				amount: amount,
 				fee: 0,
 				type: TxTypes.DEPOSIT,
 				fromUserPubkey: 'user_deposit',
 				toUserPubkey: email,
+			});
+
+			await queryRunner.manager.update(User, user.id, {
+				btcBalance: () => `btc_balance + ${amount}`,
 			});
 
 			await queryRunner.commitTransaction();
