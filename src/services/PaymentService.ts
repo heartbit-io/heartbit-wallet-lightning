@@ -51,11 +51,13 @@ class PaymentsService {
 				);
 
 			const tag = 'withdrawRequest';
-			const amountInmsat = Number(amount) * 1000;
+			const amountInMsat = Number(amount) * 1000;
+			// Let's not count the floating point for fee
+			const feeInMsat = Math.floor(amount * 0.01) * 1000;
 			const params = {
 				defaultDescription: email,
 				minWithdrawable: 1000,
-				maxWithdrawable: amountInmsat,
+				maxWithdrawable: amountInMsat - feeInMsat,
 			};
 			const options = {
 				uses: 1,
@@ -136,28 +138,73 @@ class PaymentsService {
 				.getOne();
 			if (!user) throw new CustomError(HttpCodes.NOT_FOUND, 'User not found');
 
-			const payment: PayResult = await LNDUtil.makePayment(lnd, invoice);
-			if (!payment.is_confirmed)
-				throw new CustomError(HttpCodes.UNPROCESSED_CONTENT, 'Payment failed');
+			const withdrawalSat = (withdrawalInfo.maxWithdrawable / 1000) as number;
 
-			await queryRunner.manager.insert(BtcTransaction, {
-				amount: payment.tokens,
+			const btcTx = await queryRunner.manager.insert(BtcTransaction, {
+				amount: withdrawalSat,
 				fromUserPubkey: withdrawalInfo.defaultDescription as string,
-				toUserPubkey: 'user_withdraw',
-				fee: Math.ceil(payment.tokens * 0.01),
+				toUserPubkey: withdrawalInfo.defaultDescription as string,
+				fee: Math.floor(withdrawalSat / 99),
 				type: TxTypes.WITHDRAW,
+				createdAt: () => 'CURRENT_TIMESTAMP',
+				updatedAt: () => 'CURRENT_TIMESTAMP',
 			});
 
 			await queryRunner.manager.update(User, user.id, {
-				btcBalance: () => `btc_balance - ${payment.tokens}`,
+				btcBalance: () => `btc_balance - ${withdrawalSat}`,
 			});
 
 			await queryRunner.commitTransaction();
-			nodeCache.del(secret);
-		} catch (error: any) {
-			logger.error(error);
 
-			await queryRunner.rollbackTransaction();
+			const payment: PayResult = await LNDUtil.makePayment(lnd, invoice);
+			if (!payment.is_confirmed) {
+				await queryRunner.startTransaction('REPEATABLE READ');
+				/*
+				If payment is not confirmed, rollback committed transaction
+				As committed one cannot be rolled back automatically,
+				Need to roll back manually
+				*/
+
+				// delete last btc transaction inserted
+				await queryRunner.manager.delete(
+					BtcTransaction,
+					btcTx.identifiers[0].id,
+				);
+
+				// recover user balance
+				await queryRunner.manager
+					.getRepository(User)
+					.createQueryBuilder('user')
+					.useTransaction(true)
+					.setLock('pessimistic_write')
+					.update(User)
+					.set({
+						btcBalance: () => `btc_balance + ${withdrawalSat}`,
+					})
+					.where('id = :id', { id: user.id })
+					.execute();
+
+				await queryRunner.commitTransaction();
+
+				throw new CustomError(HttpCodes.UNPROCESSED_CONTENT, 'Payment failed');
+			} else {
+				try {
+					nodeCache.del(secret);
+				} catch (error) {
+					throw new CustomError(
+						HttpCodes.SERVICE_UNAVAILABLE,
+						'Cache delete failed',
+					);
+				}
+			}
+		} catch (error: any) {
+			console.log(error);
+			logger.error(error);
+			// automatic rollback except lightning payment or cache delete failure
+			error.message != 'Payment failed' ||
+			error.message != 'Cache delete failed'
+				? await queryRunner.rollbackTransaction()
+				: '';
 
 			throw error.code && error.message
 				? error

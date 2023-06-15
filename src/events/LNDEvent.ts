@@ -41,8 +41,10 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 				amount: amount,
 				fee: 0,
 				type: TxTypes.DEPOSIT,
-				fromUserPubkey: 'user_deposit',
+				fromUserPubkey: email,
 				toUserPubkey: email,
+				createdAt: () => 'CURRENT_TIMESTAMP',
+				updatedAt: () => 'CURRENT_TIMESTAMP',
 			});
 
 			await queryRunner.manager.update(User, user.id, {
