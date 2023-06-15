@@ -140,12 +140,14 @@ class PaymentsService {
 
 			const withdrawalSat = (withdrawalInfo.maxWithdrawable / 1000) as number;
 
-			await queryRunner.manager.insert(BtcTransaction, {
+			const btcTx = await queryRunner.manager.insert(BtcTransaction, {
 				amount: withdrawalSat,
 				fromUserPubkey: withdrawalInfo.defaultDescription as string,
-				toUserPubkey: 'user_withdraw',
+				toUserPubkey: withdrawalInfo.defaultDescription as string,
 				fee: Math.floor(withdrawalSat / 99),
 				type: TxTypes.WITHDRAW,
+				createdAt: () => 'CURRENT_TIMESTAMP',
+				updatedAt: () => 'CURRENT_TIMESTAMP',
 			});
 
 			await queryRunner.manager.update(User, user.id, {
@@ -155,12 +157,43 @@ class PaymentsService {
 			await queryRunner.commitTransaction();
 
 			const payment: PayResult = await LNDUtil.makePayment(lnd, invoice);
-			if (!payment.is_confirmed)
+			if (!payment.is_confirmed) {
+				await queryRunner.startTransaction('REPEATABLE READ');
+				/*
+				If payment is not confirmed, rollback committed transaction
+				As committed one cannot be rolled back automatically,
+				Need to roll back manually
+				*/
+
+				// delete last btc transaction inserted
+				await queryRunner.manager.delete(
+					BtcTransaction,
+					btcTx.identifiers[0].id,
+				);
+
+				// recover user balance
+				await queryRunner.manager
+					.getRepository(User)
+					.createQueryBuilder('user')
+					.useTransaction(true)
+					.setLock('pessimistic_write')
+					.update(User)
+					.set({
+						btcBalance: () => `btc_balance + ${withdrawalSat}`,
+					})
+					.where('id = :id', { id: user.id })
+					.execute();
+
+				await queryRunner.commitTransaction();
+
 				throw new CustomError(HttpCodes.UNPROCESSED_CONTENT, 'Payment failed');
+			}
 		} catch (error: any) {
 			logger.error(error);
-
-			await queryRunner.rollbackTransaction();
+			// automatic rollback except lightning payment error
+			error.message != 'Payment failed'
+				? await queryRunner.rollbackTransaction()
+				: '';
 
 			throw error.code && error.message
 				? error
