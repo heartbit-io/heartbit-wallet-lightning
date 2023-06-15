@@ -187,11 +187,22 @@ class PaymentsService {
 				await queryRunner.commitTransaction();
 
 				throw new CustomError(HttpCodes.UNPROCESSED_CONTENT, 'Payment failed');
+			} else {
+				try {
+					nodeCache.del(secret);
+				} catch (error) {
+					throw new CustomError(
+						HttpCodes.SERVICE_UNAVAILABLE,
+						'Cache delete failed',
+					);
+				}
 			}
 		} catch (error: any) {
+			console.log(error);
 			logger.error(error);
-			// automatic rollback except lightning payment error
-			error.message != 'Payment failed'
+			// automatic rollback except lightning payment or cache delete failure
+			error.message != 'Payment failed' ||
+			error.message != 'Cache delete failed'
 				? await queryRunner.rollbackTransaction()
 				: '';
 
