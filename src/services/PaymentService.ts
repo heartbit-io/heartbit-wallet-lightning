@@ -157,8 +157,6 @@ class PaymentsService {
 			const payment: PayResult = await LNDUtil.makePayment(lnd, invoice);
 			if (!payment.is_confirmed)
 				throw new CustomError(HttpCodes.UNPROCESSED_CONTENT, 'Payment failed');
-
-			nodeCache.del(secret);
 		} catch (error: any) {
 			logger.error(error);
 
