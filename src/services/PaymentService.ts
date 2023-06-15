@@ -51,11 +51,13 @@ class PaymentsService {
 				);
 
 			const tag = 'withdrawRequest';
-			const amountInmsat = Number(amount) * 1000;
+			const amountInMsat = Number(amount) * 1000;
+			// Let's not count the floating point for fee
+			const feeInMsat = Math.floor(amount * 0.01) * 1000;
 			const params = {
 				defaultDescription: email,
 				minWithdrawable: 1000,
-				maxWithdrawable: amountInmsat,
+				maxWithdrawable: amountInMsat - feeInMsat,
 			};
 			const options = {
 				uses: 1,
@@ -140,16 +142,18 @@ class PaymentsService {
 			if (!payment.is_confirmed)
 				throw new CustomError(HttpCodes.UNPROCESSED_CONTENT, 'Payment failed');
 
+			const withdrawalSat = (withdrawalInfo.maxWithdrawable / 1000) as number;
+
 			await queryRunner.manager.insert(BtcTransaction, {
-				amount: payment.tokens,
+				amount: withdrawalSat,
 				fromUserPubkey: withdrawalInfo.defaultDescription as string,
 				toUserPubkey: 'user_withdraw',
-				fee: Math.ceil(payment.tokens * 0.01),
+				fee: Math.floor(withdrawalSat / 99),
 				type: TxTypes.WITHDRAW,
 			});
 
 			await queryRunner.manager.update(User, user.id, {
-				btcBalance: () => `btc_balance - ${payment.tokens}`,
+				btcBalance: () => `btc_balance - ${withdrawalSat}`,
 			});
 
 			await queryRunner.commitTransaction();
