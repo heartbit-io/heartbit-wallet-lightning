@@ -117,7 +117,6 @@ class PaymentsController {
 	async payWithdrawalInvoice(
 		request: Request,
 		// lud spec return type
-		response: { status: string; reason?: string },
 	): Promise<{ status: string; reason?: string }> {
 		// type request first
 		const { k1, pr } = request.query as unknown as { k1: string; pr: string };
