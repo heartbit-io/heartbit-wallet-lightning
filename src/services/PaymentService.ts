@@ -138,10 +138,6 @@ class PaymentsService {
 				.getOne();
 			if (!user) throw new CustomError(HttpCodes.NOT_FOUND, 'User not found');
 
-			const payment: PayResult = await LNDUtil.makePayment(lnd, invoice);
-			if (!payment.is_confirmed)
-				throw new CustomError(HttpCodes.UNPROCESSED_CONTENT, 'Payment failed');
-
 			const withdrawalSat = (withdrawalInfo.maxWithdrawable / 1000) as number;
 
 			await queryRunner.manager.insert(BtcTransaction, {
@@ -157,6 +153,11 @@ class PaymentsService {
 			});
 
 			await queryRunner.commitTransaction();
+
+			const payment: PayResult = await LNDUtil.makePayment(lnd, invoice);
+			if (!payment.is_confirmed)
+				throw new CustomError(HttpCodes.UNPROCESSED_CONTENT, 'Payment failed');
+
 			nodeCache.del(secret);
 		} catch (error: any) {
 			logger.error(error);
