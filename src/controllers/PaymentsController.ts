@@ -116,25 +116,25 @@ class PaymentsController {
 
 	async payWithdrawalInvoice(
 		request: Request,
-		response: Response<string>,
-	): Promise<Response<string>> {
+		// lud spec return type
+		response: { status: string; reason?: string },
+	): Promise<{ status: string; reason?: string }> {
 		// type request first
 		const { k1, pr } = request.query as unknown as { k1: string; pr: string };
 		const secret = k1;
 		const invoice = pr;
 		try {
 			await PaymentService.payWithdrawalInvoice(secret, invoice);
-			return response
-				.status(HttpCodes.OK)
-				.json('HeartBit withdrawal successful');
+			return { status: 'OK' };
 		} catch (error: any) {
 			logger.error(error);
 			Sentry.captureMessage(
 				`[${HttpCodes.INTERNAL_SERVER_ERROR}] ${error.message}`,
 			);
-			return response
-				.status(error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR)
-				.json(error.message ? error.message : 'HTTP error');
+			return {
+				status: 'ERROR',
+				reason: error.message ? error.message : 'HTTP error',
+			};
 		}
 	}
 }
