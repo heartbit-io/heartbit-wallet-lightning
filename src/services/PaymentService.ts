@@ -140,6 +140,12 @@ class PaymentsService {
 
 			const withdrawalSat = (withdrawalInfo.maxWithdrawable / 1000) as number;
 
+			if (user.btcBalance < withdrawalSat)
+				throw new CustomError(
+					HttpCodes.UNPROCESSED_CONTENT,
+					'Insufficient balance',
+				);
+
 			const btcTx = await queryRunner.manager.insert(BtcTransaction, {
 				amount: withdrawalSat,
 				fromUserPubkey: withdrawalInfo.defaultDescription as string,
