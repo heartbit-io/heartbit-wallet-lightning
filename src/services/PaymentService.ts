@@ -1,21 +1,15 @@
 import LNDUtil from '../utils/LNDUtil';
 import { HttpCodes } from '../enums/HttpCodes';
-import { lnd, lud } from '..';
+import { lnd, lud, cache } from '..';
 import logger from '../utils/logger';
 import { CustomError } from '../libs/CustomError';
 import { PayResult } from 'lightning';
 import dataSource, { userRepository } from '../domains/repo';
-import NodeCache from 'node-cache';
 import { TxTypes } from '../enums/TxTypes';
 import WithdrawalInfoDto from '../dto/WithdrawalInfoDto';
 import { User } from '../domains/entities/User';
 import { BtcTransaction } from '../domains/entities/BtcTransaction';
 import env from '../config/env';
-
-const nodeCache = new NodeCache({
-	stdTTL: 60 * 60 * 24 * 3,
-	checkperiod: 60 * 60 * 24 * 3,
-});
 
 class PaymentsService {
 	async getPaymentRequest(email: string, amount: number): Promise<string> {
@@ -28,6 +22,31 @@ class PaymentsService {
 			return paymentRequest.request;
 		} catch (error: any) {
 			logger.error(error);
+			throw error.code && error.message
+				? error
+				: new CustomError(
+						HttpCodes.INTERNAL_SERVER_ERROR,
+						'Internal Server Error',
+				  );
+		}
+	}
+
+	async getHoldingPaymentRequest(
+		email: string,
+		amount: number,
+	): Promise<string> {
+		try {
+			const { invoice, secret } = await LNDUtil.requestHoldingPayment(
+				lnd,
+				Number(amount),
+				email,
+			);
+
+			cache.set(invoice.request, secret);
+
+			return invoice.request;
+		} catch (error: any) {
+			console.error(error);
 			throw error.code && error.message
 				? error
 				: new CustomError(
@@ -66,7 +85,7 @@ class PaymentsService {
 			const withdrawRequest = await lud.generateNewUrl(tag, params, options);
 
 			if (
-				!nodeCache.set(
+				!cache.set(
 					withdrawRequest.secret,
 					new WithdrawalInfoDto(
 						tag,
@@ -97,8 +116,7 @@ class PaymentsService {
 
 	async getWithdrawalInfo(secret: string): Promise<WithdrawalInfoDto> {
 		try {
-			const withdrawalInfo: WithdrawalInfoDto | undefined =
-				nodeCache.get(secret);
+			const withdrawalInfo: WithdrawalInfoDto | undefined = cache.get(secret);
 			if (withdrawalInfo === undefined)
 				throw new CustomError(HttpCodes.BAD_REQUEST, 'Invalid q value');
 			return withdrawalInfo;
@@ -122,8 +140,7 @@ class PaymentsService {
 			secret = secret as string;
 			invoice = invoice as string;
 
-			const withdrawalInfo: WithdrawalInfoDto | undefined =
-				nodeCache.get(secret);
+			const withdrawalInfo: WithdrawalInfoDto | undefined = cache.get(secret);
 			if (withdrawalInfo === undefined)
 				throw new CustomError(HttpCodes.BAD_REQUEST, 'Invalid k1 value');
 
@@ -195,7 +212,7 @@ class PaymentsService {
 				throw new CustomError(HttpCodes.UNPROCESSED_CONTENT, 'Payment failed');
 			} else {
 				try {
-					nodeCache.del(secret);
+					cache.del(secret);
 				} catch (error) {
 					throw new CustomError(
 						HttpCodes.SERVICE_UNAVAILABLE,

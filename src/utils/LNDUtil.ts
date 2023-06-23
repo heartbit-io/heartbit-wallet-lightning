@@ -18,9 +18,13 @@ import {
 	getChainBalance,
 	subscribeToInvoices,
 	subscribeToPayments,
+	createHodlInvoice,
+	CreateHodlInvoiceResult,
+	settleHodlInvoice,
 } from 'lightning';
 import { EventEmitter } from 'stream';
 import logger from './logger';
+import crypto from 'crypto';
 
 class LNDUtil {
 	static connectionStatus = async (lnd: AuthenticatedLnd): Promise<boolean> => {
@@ -95,6 +99,37 @@ class LNDUtil {
 		});
 		// invoice to show client
 		return invoice;
+	};
+
+	// Hodl invoice in lightning can be settled manually
+	static requestHoldingPayment = async (
+		lnd: AuthenticatedLnd,
+		amount: number,
+		description?: string,
+	): Promise<{ invoice: CreateHodlInvoiceResult; secret: string }> => {
+		// need to provide this secret to settle later
+		const secret: Buffer = crypto.randomBytes(32);
+		const invoice: CreateHodlInvoiceResult = await createHodlInvoice({
+			id: crypto.createHash('sha256').update(secret).digest('hex'),
+			lnd,
+			tokens: amount,
+			description: description,
+		});
+		// invoice to show client
+		return { invoice, secret: secret.toString('hex') };
+	};
+
+	static settleHoldingPayment = async (
+		lnd: AuthenticatedLnd,
+		secret: string,
+	): Promise<boolean> => {
+		try {
+			await settleHodlInvoice({ lnd, secret });
+			return true;
+		} catch (err) {
+			console.log(err);
+			return false;
+		}
 	};
 
 	static makePayment = async (
