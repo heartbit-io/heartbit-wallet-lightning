@@ -71,12 +71,10 @@ class PaymentsService {
 
 			const tag = 'withdrawRequest';
 			const amountInMsat = Number(amount) * 1000;
-			// Let's not count the floating point for fee
-			const feeInMsat = Math.floor(amount * 0.01) * 1000;
 			const params = {
 				defaultDescription: email,
 				minWithdrawable: 1000,
-				maxWithdrawable: amountInMsat - feeInMsat,
+				maxWithdrawable: amountInMsat,
 			};
 			const options = {
 				uses: 1,
@@ -167,7 +165,7 @@ class PaymentsService {
 				amount: withdrawalSat,
 				fromUserPubkey: withdrawalInfo.defaultDescription as string,
 				toUserPubkey: withdrawalInfo.defaultDescription as string,
-				fee: Math.floor(withdrawalSat / 99),
+				fee: 0,
 				type: TxTypes.WITHDRAW,
 				createdAt: () => 'CURRENT_TIMESTAMP',
 				updatedAt: () => 'CURRENT_TIMESTAMP',
