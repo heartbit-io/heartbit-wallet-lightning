@@ -15,6 +15,7 @@ import logger from './utils/logger';
 import { onLUDFail } from './events/LUDEvent';
 import dataSource from './domains/repo';
 import router from './routes';
+import NodeCache from 'node-cache';
 
 const app: Express = express();
 const port = Number(env.SERVER_PORT);
@@ -63,6 +64,11 @@ app.all('*', (req: Request, res: Response) => {
 		.json(new ResponseDto(false, HttpCodes.NOT_FOUND, message, null));
 });
 
+const cache = new NodeCache({
+	stdTTL: 60 * 60 * 24 * 3,
+	checkperiod: 60 * 60 * 24 * 3,
+});
+
 let lnd: AuthenticatedLnd;
 let lud: any;
 
@@ -84,4 +90,4 @@ app.listen(port, async () => {
 	}
 });
 
-export { lnd, lud };
+export { lnd, lud, cache };
