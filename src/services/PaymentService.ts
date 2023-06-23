@@ -31,6 +31,31 @@ class PaymentsService {
 		}
 	}
 
+	async getHoldingPaymentRequest(
+		email: string,
+		amount: number,
+	): Promise<string> {
+		try {
+			const { invoice, secret } = await LNDUtil.requestHoldingPayment(
+				lnd,
+				Number(amount),
+				email,
+			);
+
+			cache.set(invoice.request, secret);
+
+			return invoice.request;
+		} catch (error: any) {
+			console.error(error);
+			throw error.code && error.message
+				? error
+				: new CustomError(
+						HttpCodes.INTERNAL_SERVER_ERROR,
+						'Internal Server Error',
+				  );
+		}
+	}
+
 	async getWithdrawalRequest(email: string, amount: number): Promise<string> {
 		try {
 			//check that user has enough balance
