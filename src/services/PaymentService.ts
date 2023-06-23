@@ -47,6 +47,7 @@ class PaymentsService {
 			return invoice.request;
 		} catch (error: any) {
 			console.error(error);
+			logger.error(error);
 			throw error.code && error.message
 				? error
 				: new CustomError(
@@ -179,8 +180,16 @@ class PaymentsService {
 
 			await queryRunner.commitTransaction();
 
-			const payment: PayResult = await LNDUtil.makePayment(lnd, invoice);
-			if (!payment.is_confirmed) {
+			// error handling block for custom rollback
+			try {
+				const payment: PayResult = await LNDUtil.makePayment(lnd, invoice);
+				if (!payment.is_confirmed)
+					throw new CustomError(
+						HttpCodes.UNPROCESSED_CONTENT,
+						'payment not confirmed',
+					);
+			} catch (err) {
+				logger.error(err);
 				await queryRunner.startTransaction('REPEATABLE READ');
 				/*
 				If payment is not confirmed, rollback committed transaction
@@ -210,22 +219,18 @@ class PaymentsService {
 				await queryRunner.commitTransaction();
 
 				throw new CustomError(HttpCodes.UNPROCESSED_CONTENT, 'Payment failed');
-			} else {
-				try {
-					cache.del(secret);
-				} catch (error) {
-					throw new CustomError(
-						HttpCodes.SERVICE_UNAVAILABLE,
-						'Cache delete failed',
-					);
-				}
 			}
+			/* 
+				remove cache at last not to make anymore transactions to database
+				(even when cache error happens),
+				and after payment successfully confirmed.
+			*/
+			cache.del(secret);
 		} catch (error: any) {
 			console.log(error);
 			logger.error(error);
-			// automatic rollback except lightning payment or cache delete failure
-			error.message != 'Payment failed' ||
-			error.message != 'Cache delete failed'
+			// automatic rollback except lightning payment failure
+			error.message != 'Payment failed'
 				? await queryRunner.rollbackTransaction()
 				: '';
 
