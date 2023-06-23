@@ -10,15 +10,15 @@ import { BtcTransaction } from '../domains/entities/BtcTransaction';
 
 async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 	await LNDUtil.depositEventOn(lnd, async (event: any) => {
+		const { description, is_confirmed, received } = event;
+		if (!is_confirmed) return;
+		logger.log(event);
+
 		const queryRunner = dataSource.createQueryRunner();
 		await queryRunner.connect();
 		await queryRunner.startTransaction('REPEATABLE READ');
 
 		try {
-			const { description, is_confirmed, received } = event;
-
-			if (!is_confirmed) return;
-
 			const amount = Number(received);
 
 			const email = description ? description : null;
