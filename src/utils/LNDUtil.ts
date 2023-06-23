@@ -108,7 +108,7 @@ class LNDUtil {
 		description?: string,
 	): Promise<{ invoice: CreateHodlInvoiceResult; secret: string }> => {
 		// need to provide this secret to settle later
-		const secret = crypto.randomBytes(32).toString('hex');
+		const secret: Buffer = crypto.randomBytes(32);
 		const invoice: CreateHodlInvoiceResult = await createHodlInvoice({
 			id: crypto.createHash('sha256').update(secret).digest('hex'),
 			lnd,
@@ -116,7 +116,7 @@ class LNDUtil {
 			description: description,
 		});
 		// invoice to show client
-		return { invoice, secret };
+		return { invoice, secret: secret.toString('hex') };
 	};
 
 	static settleHoldingPayment = async (
