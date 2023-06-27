@@ -5,8 +5,8 @@ import { HttpCodes } from '../enums/HttpCodes';
 import ResponseDto from '../dto/ResponseDto';
 import env from '../config/env';
 
-class Auth {
-	async verifyKey(req: Request, res: Response, next: NextFunction) {
+class AuthUtil {
+	static async verifyKey(req: Request, res: Response, next: NextFunction) {
 		const key = req?.headers?.authorization;
 		try {
 			if (key === env.API_KEY) return next();
@@ -27,4 +27,4 @@ class Auth {
 	}
 }
 
-export default new Auth();
+export default AuthUtil;
