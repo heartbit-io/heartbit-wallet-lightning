@@ -21,6 +21,7 @@ const env = {
 	LND_MACAROON_PATH: process.env.LND_MACAROON_PATH as string,
 	SENTRY_DSN: process.env.SENTRY_DSN as string,
 	BASE_SERVER_DOMAIN: process.env.BASE_SERVER_DOMAIN as string,
+	API_KEY: process.env.API_KEY as string,
 };
 
 Object.entries(env).forEach(([key, value]) => {
