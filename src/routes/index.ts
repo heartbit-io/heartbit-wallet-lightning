@@ -6,7 +6,7 @@ import AuthUtil from '../utils/AuthUtil';
 
 const router = Router();
 
-router.use('/lnd', AuthUtil.verifyKey, lndRoutes);
+router.use('/lnd', AuthUtil.verifyKeyAndToken, lndRoutes);
 router.use('/lnurl', ludRoutes);
 router.use('/healthcheck', healthcheck);
 
