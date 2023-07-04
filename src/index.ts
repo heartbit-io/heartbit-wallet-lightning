@@ -65,8 +65,8 @@ app.all('*', (req: Request, res: Response) => {
 });
 
 const cache = new NodeCache({
-	stdTTL: 60 * 60 * 24 * 3,
-	checkperiod: 60 * 60 * 24 * 3,
+	stdTTL: 60 * 60 * 24 * 1,
+	checkperiod: 60 * 60 * 24 * 1,
 });
 
 let lnd: AuthenticatedLnd;
