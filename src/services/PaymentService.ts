@@ -59,6 +59,13 @@ class PaymentsService {
 
 	async getWithdrawalRequest(email: string, amount: number): Promise<string> {
 		try {
+			//check wheter amount is greater than 500k satoshi
+			if (amount > 500000)
+				throw new CustomError(
+					HttpCodes.BAD_REQUEST,
+					'Maximum withdrawable amount is 500k satoshis per request',
+				);
+
 			//check that user has enough balance
 			const user = await userRepository.findOneBy({ email: email });
 
@@ -143,6 +150,19 @@ class PaymentsService {
 			if (withdrawalInfo === undefined)
 				throw new CustomError(HttpCodes.BAD_REQUEST, 'Invalid k1 value');
 
+			const withdrawalSat = (withdrawalInfo.maxWithdrawable / 1000) as number;
+
+			//check wheter amount is greater than 2 milion satoshi
+			let accumulatedAmount: number | undefined = cache.get(
+				withdrawalInfo.defaultDescription,
+			);
+			if (!accumulatedAmount) accumulatedAmount = 0;
+			if (accumulatedAmount + withdrawalSat > 2000000)
+				throw new CustomError(
+					HttpCodes.SERVICE_UNAVAILABLE,
+					'Daily withdrawable amount is capped',
+				);
+
 			const user = await queryRunner.manager
 				.getRepository(User)
 				.createQueryBuilder('user')
@@ -153,8 +173,6 @@ class PaymentsService {
 				})
 				.getOne();
 			if (!user) throw new CustomError(HttpCodes.NOT_FOUND, 'User not found');
-
-			const withdrawalSat = (withdrawalInfo.maxWithdrawable / 1000) as number;
 
 			if (user.btcBalance < withdrawalSat)
 				throw new CustomError(
@@ -224,6 +242,10 @@ class PaymentsService {
 				and after payment successfully confirmed.
 			*/
 			cache.del(secret);
+			cache.set(
+				withdrawalInfo.defaultDescription,
+				accumulatedAmount + withdrawalSat,
+			);
 		} catch (error: any) {
 			console.log(error);
 			logger.error(error);
