@@ -116,24 +116,26 @@ class PaymentsController {
 
 	async payWithdrawalInvoice(
 		request: Request,
-		// lud spec return type
-	): Promise<{ status: string; reason?: string }> {
+		response: Response<{ status: string; reason?: string }>,
+	): Promise<Response<{ status: string; reason?: string }>> {
 		// type request first
 		const { k1, pr } = request.query as unknown as { k1: string; pr: string };
 		const secret = k1;
 		const invoice = pr;
 		try {
 			await PaymentService.payWithdrawalInvoice(secret, invoice);
-			return { status: 'OK' };
+			return response.status(HttpCodes.OK).json({ status: 'OK' });
 		} catch (error: any) {
 			logger.error(error);
 			Sentry.captureMessage(
 				`[${HttpCodes.INTERNAL_SERVER_ERROR}] ${error.message}`,
 			);
-			return {
-				status: 'ERROR',
-				reason: error.message ? error.message : 'HTTP error',
-			};
+			return response
+				.status(error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR)
+				.json({
+					status: 'ERROR',
+					reason: error.message ? error.message : 'HTTP error',
+				});
 		}
 	}
 }
