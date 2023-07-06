@@ -10,6 +10,7 @@ import WithdrawalInfoDto from '../dto/WithdrawalInfoDto';
 import { User } from '../domains/entities/User';
 import { BtcTransaction } from '../domains/entities/BtcTransaction';
 import env from '../config/env';
+import FBUtil from '../utils/FBUtil';
 
 class PaymentsService {
 	async getPaymentRequest(email: string, amount: number): Promise<string> {
@@ -245,6 +246,13 @@ class PaymentsService {
 			cache.set(
 				withdrawalInfo.defaultDescription,
 				accumulatedAmount + withdrawalSat,
+			);
+
+			// Don't rollback even when push noti fail(not a big deal)
+			await FBUtil.sendNotification(
+				user.fcmToken,
+				'HeartBit',
+				`You have successfully withdrawn ${withdrawalSat.toLocaleString()} sats.`,
 			);
 		} catch (error: any) {
 			console.log(error);
