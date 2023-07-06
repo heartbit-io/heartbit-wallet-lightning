@@ -29,6 +29,9 @@ export class User {
 	@Column()
 	btcBalance: number;
 
+	@Column({ nullable: true, unique: true })
+	fcmToken: string;
+
 	@CreateDateColumn()
 	createdAt: Date;
 
