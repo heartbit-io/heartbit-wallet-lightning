@@ -44,13 +44,19 @@ class FBUtil {
 		}
 	}
 
-	static async sendNotification(token: string, title: string, message: string) {
+	static async sendNotification(
+		token: string,
+		title: string,
+		message: string,
+		type: string,
+	) {
 		try {
 			const payload = {
 				token,
 				notification: {
 					title,
 					body: message,
+					type,
 				},
 			};
 

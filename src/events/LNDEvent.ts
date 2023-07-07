@@ -57,8 +57,9 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 			// Don't rollback even when push noti fail(not a big deal)
 			await FBUtil.sendNotification(
 				user.fcmToken,
-				'HeartBit TRANSACTION',
+				'HeartBit',
 				`You have successfully deposited ${amount.toLocaleString()} sats.`,
+				'TRANSACTION',
 			);
 		} catch (error: any) {
 			logger.error(error);
