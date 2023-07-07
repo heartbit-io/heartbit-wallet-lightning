@@ -253,7 +253,7 @@ class PaymentsService {
 				user.fcmToken,
 				'HeartBit',
 				`You have successfully withdrawn ${withdrawalSat.toLocaleString()} sats.`,
-				'TRANSACTION',
+				{ type: 'TRANSACTION' },
 			);
 		} catch (error: any) {
 			console.log(error);

@@ -48,15 +48,15 @@ class FBUtil {
 		token: string,
 		title: string,
 		message: string,
-		type: string,
+		data: any,
 	) {
 		try {
 			const payload = {
 				token,
+				data,
 				notification: {
 					title,
 					body: message,
-					type,
 				},
 			};
 

@@ -59,7 +59,7 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 				user.fcmToken,
 				'HeartBit',
 				`You have successfully deposited ${amount.toLocaleString()} sats.`,
-				'TRANSACTION',
+				{ type: 'TRANSACTION' },
 			);
 		} catch (error: any) {
 			logger.error(error);
