@@ -251,7 +251,7 @@ class PaymentsService {
 			// Don't rollback even when push noti fail(not a big deal)
 			await FBUtil.sendNotification(
 				user.fcmToken,
-				'HeartBit',
+				'HeartBit TRANSACTION',
 				`You have successfully withdrawn ${withdrawalSat.toLocaleString()} sats.`,
 			);
 		} catch (error: any) {
