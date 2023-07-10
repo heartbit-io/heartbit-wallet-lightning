@@ -7,7 +7,7 @@ import env from '../config/env';
 import admin from '../config/initFB';
 import { logger } from '@sentry/utils';
 
-class AuthUtil {
+class FBUtil {
 	static async verifyKeyAndToken(
 		req: Request,
 		res: Response,
@@ -43,6 +43,28 @@ class AuthUtil {
 				);
 		}
 	}
+
+	static async sendNotification(
+		token: string,
+		title: string,
+		message: string,
+		data: any,
+	) {
+		try {
+			const payload = {
+				token,
+				data,
+				notification: {
+					title,
+					body: message,
+				},
+			};
+
+			return admin.messaging().send(payload);
+		} catch (error) {
+			console.error('FCM Error:', error);
+		}
+	}
 }
 
-export default AuthUtil;
+export default FBUtil;

@@ -7,6 +7,7 @@ import { HttpCodes } from '../enums/HttpCodes';
 import dataSource from '../domains/repo';
 import { User } from '../domains/entities/User';
 import { BtcTransaction } from '../domains/entities/BtcTransaction';
+import FBUtil from '../utils/FBUtil';
 
 async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 	await LNDUtil.depositEventOn(lnd, async (event: any) => {
@@ -52,6 +53,14 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 			});
 
 			await queryRunner.commitTransaction();
+
+			// Don't rollback even when push noti fail(not a big deal)
+			await FBUtil.sendNotification(
+				user.fcmToken,
+				'HeartBit',
+				`You have successfully deposited ${amount.toLocaleString()} sats.`,
+				{ type: 'TRANSACTION' },
+			);
 		} catch (error: any) {
 			logger.error(error);
 			await queryRunner.rollbackTransaction();
