@@ -15,6 +15,7 @@ class FBUtil {
 	) {
 		const key = req?.headers?.apikey as string;
 		const token = req?.headers?.authorization?.split(' ')[1] as string;
+
 		try {
 			const user = await admin.auth().verifyIdToken(token);
 			if (key === env.API_KEY && user.email_verified) return next();
@@ -62,6 +63,7 @@ class FBUtil {
 
 			return admin.messaging().send(payload);
 		} catch (error) {
+			Sentry.captureMessage(`FCM Error: ${error}`);
 			console.error('FCM Error:', error);
 		}
 	}
