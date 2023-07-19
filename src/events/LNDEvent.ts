@@ -8,6 +8,7 @@ import dataSource from '../domains/repo';
 import { User } from '../domains/entities/User';
 import { BtcTransaction } from '../domains/entities/BtcTransaction';
 import FBUtil from '../utils/FBUtil';
+import * as Sentry from '@sentry/node';
 
 async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 	await LNDUtil.depositEventOn(lnd, async (event: any) => {
@@ -63,6 +64,11 @@ async function onLNDDeposit(lnd: AuthenticatedLnd): Promise<boolean> {
 			);
 		} catch (error: any) {
 			logger.error(error);
+			Sentry.captureMessage(
+				`[${error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR}] ${
+					error.message
+				}`,
+			);
 			await queryRunner.rollbackTransaction();
 		} finally {
 			await queryRunner.release();

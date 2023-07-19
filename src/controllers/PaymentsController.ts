@@ -37,7 +37,9 @@ class PaymentsController {
 		} catch (error: any) {
 			logger.error(error);
 			Sentry.captureMessage(
-				`[${HttpCodes.INTERNAL_SERVER_ERROR}] ${error.message}`,
+				`[${error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR}] ${
+					error.message
+				}`,
 			);
 			return response
 				.status(error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR)
@@ -77,7 +79,9 @@ class PaymentsController {
 		} catch (error: any) {
 			logger.error(error);
 			Sentry.captureMessage(
-				`[${HttpCodes.INTERNAL_SERVER_ERROR}] ${error.message}`,
+				`[${error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR}] ${
+					error.message
+				}`,
 			);
 			return response
 				.status(error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR)
@@ -106,7 +110,9 @@ class PaymentsController {
 		} catch (error: any) {
 			logger.error(error);
 			Sentry.captureMessage(
-				`[${HttpCodes.INTERNAL_SERVER_ERROR}] ${error.message}`,
+				`[${error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR}] ${
+					error.message
+				}`,
 			);
 			return response
 				.status(error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR)
@@ -128,7 +134,9 @@ class PaymentsController {
 		} catch (error: any) {
 			logger.error(error);
 			Sentry.captureMessage(
-				`[${HttpCodes.INTERNAL_SERVER_ERROR}] ${error.message}`,
+				`[${error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR}] ${
+					error.message
+				}`,
 			);
 			return response
 				.status(error.code ? error.code : HttpCodes.INTERNAL_SERVER_ERROR)
