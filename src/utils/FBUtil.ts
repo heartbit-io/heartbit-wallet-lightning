@@ -61,7 +61,7 @@ class FBUtil {
 				},
 			};
 
-			return admin.messaging().send(payload);
+			await admin.messaging().send(payload);
 		} catch (error) {
 			Sentry.captureMessage(`FCM Error: ${error}`);
 			console.error('FCM Error:', error);
