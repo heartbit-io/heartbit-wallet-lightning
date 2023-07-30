@@ -1,8 +1,6 @@
 import * as Sentry from '@sentry/node';
-
 import express, { Express, Request, Response } from 'express';
 import { onLNDDeposit, onLNDWithdrawal } from './events/LNDEvent';
-
 import { AuthenticatedLnd } from 'lightning';
 import { HttpCodes } from './enums/HttpCodes';
 import ResponseDto from './dto/ResponseDto';
@@ -16,6 +14,8 @@ import { onLUDFail } from './events/LUDEvent';
 import dataSource from './domains/repo';
 import router from './routes';
 import NodeCache from 'node-cache';
+import { boltwall } from 'boltwall';
+import { lsatRoutes } from './routes/lsatRoutes';
 
 const app: Express = express();
 const port = Number(env.SERVER_PORT);
@@ -54,6 +54,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.use('/api/v1', router);
+
+app.use(boltwall);
+
+app.use('/api/v1/lsat/', lsatRoutes);
 
 // UnKnown Routes
 app.all('*', (req: Request, res: Response) => {
