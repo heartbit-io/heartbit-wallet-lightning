@@ -29,9 +29,7 @@ class LSatServices {
 			Number(amount),
 			email,
 		);
-		const lsat = Lsat.fromMacaroon(macaroon);
-		const result = Lsat.fromMacaroon(macaroon, paymentRequest.request);
-		return result;
+		return Lsat.fromMacaroon(macaroon, paymentRequest.request);
 	}
 }
 

@@ -10,7 +10,7 @@ const dataSource = new DataSource({
 	username: env.DB_USER,
 	password: env.DB_PASSWORD,
 	database: env.NODE_ENV === 'production' ? env.DB_NAME : env.TEST_DB_NAME,
-	logging: false,
+	logging: true,
 	synchronize: env.NODE_ENV === 'production' ? false : true,
 	entities: [User, BtcTransaction],
 	namingStrategy: new SnakeNamingStrategy(),
