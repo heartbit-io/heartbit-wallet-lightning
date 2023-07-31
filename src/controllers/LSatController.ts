@@ -1,12 +1,12 @@
 import * as Sentry from '@sentry/node';
-import { Request, Response } from 'express';
+import { Request, Response, query } from 'express';
 import { HttpCodes } from '../enums/HttpCodes';
 import ResponseDto from '../dto/ResponseDto';
 import LsatService from '../services/LsatService';
 import logger from '../utils/logger';
 
 class LSatController {
-	async makeDeposit(
+	async createChallenge(
 		request: Request,
 		response: Response<ResponseDto<string | null>>,
 	) {
@@ -15,21 +15,20 @@ class LSatController {
 			amount: number;
 		};
 		try {
-			const paymentRequest = await LsatService.generateLSATRequest(
+			const paymentRequest = await LsatService.generateLSATChallenge(
 				email,
 				Number(amount),
 			);
 
 			return response
-				.status(200)
-				.json(
-					new ResponseDto(
-						true,
-						HttpCodes.OK,
-						'Payment request created successfully',
-						paymentRequest,
-					),
-				);
+				.setHeader('WWW-Authenticate', paymentRequest.data)
+				.status(HttpCodes.PAYMENT_REQUIRED)
+				.json({
+					success: false,
+					statusCode: HttpCodes.PAYMENT_REQUIRED,
+					message: 'Payment required',
+					data: null,
+				});
 		} catch (error: any) {
 			logger.error(error);
 			Sentry.captureMessage(
