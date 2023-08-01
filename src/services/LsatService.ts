@@ -17,9 +17,13 @@ import { sha256 } from 'js-sha256';
 import * as Macaroon from 'macaroon';
 import ResponseDto from '../dto/ResponseDto';
 class LSatServices {
-	async generateLSATChallenge(email: string, amount: number) {
+	async generateLSATChallenge(
+		email: string,
+		amount: number,
+		requestBody: string,
+	) {
 		try {
-			const lsatRequest = await this.generateLSAT(email, amount);
+			const lsatRequest = await this.generateLSAT(email, amount, requestBody);
 			return new ResponseDto(
 				false,
 				HttpCodes.PAYMENT_REQUIRED,
@@ -37,7 +41,7 @@ class LSatServices {
 		}
 	}
 
-	async generateLSAT(email: string, amount: number) {
+	async generateLSAT(email: string, amount: number, requestBody: string) {
 		const macaroon = Macaroon.newMacaroon({
 			version: 1,
 			rootKey: env.SESSION_STRING,
@@ -46,29 +50,29 @@ class LSatServices {
 		});
 		const invoice = await LNDUtil.requestPayment(lnd, Number(amount), email);
 		const rawMacaroon = getRawMacaroon(macaroon);
-		return `L402 macaroon="${rawMacaroon}", invoice="${invoice.request}"`;
 
-		//this is not yet working because of the configuration
-		// const lsat = Lsat.fromMacaroon(getRawMacaroon(macaroon), invoice.request);
+		// return `L402 macaroon="${rawMacaroon}", invoice="${invoice.request}"`;
 
-		// const caveat = Caveat.decode(
-		// 	'bodyHash=' + sha256.update(JSON.stringify(requestBody)),
-		// );
+		const lsat = Lsat.fromMacaroon(rawMacaroon, invoice.request);
 
-		// const caveatExpiry = new Caveat({
-		// 	condition: 'expiration',
-		// 	value: Date.now() + 600000,
-		// });
+		const caveat = Caveat.decode(
+			'bodyHash=' + sha256.update(JSON.stringify(requestBody)),
+		);
 
-		// lsat.addFirstPartyCaveat(caveat);
-		// lsat.addFirstPartyCaveat(caveatExpiry);
+		const caveatExpiry = new Caveat({
+			condition: 'expiration',
+			value: Date.now() + 600000,
+		});
 
-		// return lsat;
+		lsat.addFirstPartyCaveat(caveat);
+		lsat.addFirstPartyCaveat(caveatExpiry);
+
+		return lsat.toToken();
 	}
 
-	verifyLsatToken(lsatToken: any, requestBody: string): boolean {
+	verifyLsatToken(lsatToken: any, bodyHash: string): boolean {
 		try {
-			const bodyhash: string = '' + sha256.update(JSON.stringify(requestBody));
+			// const bodyhash: string = '' + sha256.update(JSON.stringify(requestBody));
 			const lsat = Lsat.fromToken(lsatToken);
 
 			if (lsat.isExpired() || !lsat.isSatisfied) return false;
@@ -85,7 +89,7 @@ class LSatServices {
 
 			// check if the body hash matches
 			for (const caveat of caveats) {
-				if (caveat.condition === 'bodyHash' && caveat.value !== bodyhash) {
+				if (caveat.condition === 'bodyHash' && caveat.value !== bodyHash) {
 					return false;
 				}
 			}

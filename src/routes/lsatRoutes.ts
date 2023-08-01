@@ -3,6 +3,6 @@ import LSatController from '../controllers/LSatController';
 
 const router = Router();
 
-router.get('/deposits', LSatController.createChallenge);
+router.get('/verifylsat', LSatController.verifyLsat);
 
 export { router as lsatRoutes };

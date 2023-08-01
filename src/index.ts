@@ -14,8 +14,9 @@ import { onLUDFail } from './events/LUDEvent';
 import dataSource from './domains/repo';
 import router from './routes';
 import NodeCache from 'node-cache';
-import { boltwall } from 'boltwall';
+import { ORIGIN_CAVEAT_CONFIGS, TIME_CAVEAT_CONFIGS, boltwall } from 'boltwall';
 import { lsatRoutes } from './routes/lsatRoutes';
+import { BoltwallConfig } from 'boltwall/dist/typings';
 
 const app: Express = express();
 const port = Number(env.SERVER_PORT);
@@ -55,7 +56,27 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use('/api/v1', router);
 
-// app.use(boltwall);
+const {
+	TIME_CAVEAT,
+	ORIGIN_CAVEAT,
+	ROUTE_CAVEAT,
+	BOLTWALL_OAUTH,
+	BOLTWALL_HODL,
+	BOLTWALL_MIN_AMOUNT,
+	BOLTWALL_RATE,
+} = process.env;
+let options: BoltwallConfig = {};
+options.LND_SOCKET = initLND();
+if (TIME_CAVEAT) options = TIME_CAVEAT_CONFIGS;
+if (ORIGIN_CAVEAT) options = ORIGIN_CAVEAT_CONFIGS;
+if (ROUTE_CAVEAT) options = TIME_CAVEAT_CONFIGS;
+if (BOLTWALL_OAUTH) options.oauth = false;
+if (BOLTWALL_HODL) options.hodl = false;
+if (BOLTWALL_RATE) options.rate = BOLTWALL_RATE;
+if (BOLTWALL_MIN_AMOUNT) options.minAmount = BOLTWALL_MIN_AMOUNT;
+// eslint-disable-next-line
+// @ts-ignore
+app.use(boltwall(options));
 
 app.use('/api/v1/lsat/', lsatRoutes);
 
