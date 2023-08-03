@@ -39,6 +39,7 @@ const env = {
 	FB_MESSAGING_SENDER_ID: process.env.FB_MESSAGING_SENDER_ID as string,
 	FB_APP_ID: process.env.FB_APP_ID as string,
 	FB_MEASUREMENT_ID: process.env.FB_MEASUREMENT_ID as string,
+	SESSION_STRING: process.env.SESSION_SECRET as string,
 };
 
 Object.entries(env).forEach(([key, value]) => {

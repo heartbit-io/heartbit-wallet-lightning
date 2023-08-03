@@ -5,7 +5,7 @@ import LNDUtil from '../utils/LNDUtil';
 
 async function initLND(): Promise<AuthenticatedLnd> {
 	const { lnd } = authenticatedLndGrpc({
-		cert: '',
+		cert: env.LND_TLS,
 		macaroon: env.LND_MACAROON,
 		socket: env.LND_GRPC_URL,
 	});

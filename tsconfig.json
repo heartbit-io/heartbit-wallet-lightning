@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2021",
     "experimentalDecorators": true,
-    "module": "NodeNext",
+    "module": "CommonJS",
     "rootDir": "./src",
     "moduleResolution": "node",
     "resolveJsonModule": true,
@@ -16,6 +16,6 @@
     "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false,
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/types/**/*"],
   "exclude": ["node_modules", "build", "test/**/*"]
 }
